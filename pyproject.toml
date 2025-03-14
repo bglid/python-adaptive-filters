@@ -36,7 +36,7 @@ python = "^3.9"
 bandit = "^1.7.1"
 black = "^25.1.0"
 darglint = "^1.8.1"
-isort = {extras = ["colors"], version = "^5.10.1"}
+isort = {extras = ["colors"], version = "^6.0.1"}
 mypy = "1.14.0"
 mypy-extensions = "^1.0.0"
 pre-commit = "^4.0.1"
