@@ -2,7 +2,7 @@
 
 <div align="center">
 
-[![Build status](https://github.com/bglid/adaptive_filter/workflows/build/badge.svg?branch=master&event=push)](https://github.com/bglid/adaptive_filter/actions?query=workflow%3Abuild)
+
 [![Python Version](https://img.shields.io/pypi/pyversions/adaptive_filter.svg)](https://pypi.org/project/adaptive_filter/)
 [![Dependencies Status](https://img.shields.io/badge/dependencies-up%20to%20date-brightgreen.svg)](https://github.com/bglid/adaptive_filter/pulls?utf8=%E2%9C%93&q=is%3Apr%20author%3Aapp%2Fdependabot)
 
@@ -293,3 +293,5 @@ This project is licensed under the terms of the `MIT` license. See [LICENSE](htt
 ## Credits [![🚀 Your next Python package needs a bleeding-edge project structure.](https://img.shields.io/badge/python--package--template-%F0%9F%9A%80-brightgreen)](https://github.com/TezRomacH/python-package-template)
 
 This project was generated with [`python-package-template`](https://github.com/TezRomacH/python-package-template)
+
+Library organization inspired and referenced from ``P``
