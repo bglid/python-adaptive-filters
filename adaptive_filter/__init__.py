@@ -1,4 +1,3 @@
-# type: ignore[attr-defined]
 """Python implementation of DSP adaptive filters"""
 
 import sys

@@ -1,13 +1,15 @@
 # Class that contains filter model used by most adaptive filters
 import numpy as np
+from numpy.typing import NDArray
 
 
 class FilterModel:
-    def __init__(self, mu: float) -> None:
+    def __init__(self, mu: float, n: int) -> None:
         # consider adding p: order
         self.mu = mu  # step_rate
+        self.N = n  # filter window size
 
-    def predict_y(self, x_n: np.ndarray) -> float:
+    def predict_y(self, x_n: NDArray[np.float64]) -> NDArray[np.float64]:
         """Predicts the output y[n], given vector X[n]. Uses formula W^T[n]X[n]
 
         Args:
@@ -16,7 +18,7 @@ class FilterModel:
         Returns:
             y_n float: Predicted output at n
         """
-        return self.W.T @ x_n
+        return np.dot(self.W, x_n)
 
     def error(self, d_n: float, y_n: float) -> float:
         """Calculates the error, e[n] = d[n] - y[n], y[n] is output of W^T[n]X[n]
@@ -30,7 +32,7 @@ class FilterModel:
         """
         return d_n - y_n
 
-    def update_step(self, e_n: float, x_n: np.ndarray):
+    def update_step(self, e_n: float, x_n: NDArray[np.float64]) -> NDArray[np.float64]:
         """Updates weights of W[n + 1], given the learning algorithm chosen
 
         Args:
@@ -52,26 +54,27 @@ class FilterModel:
         Returns:
         """
 
-        # getting the filter window, N, from x len
-        self.N = len(x)
-
-        # turning D and X into np arrays, if not already
-        if type(d) is not np.ndarray:
-            d = np.array(d)
-
-        if type(x) is not np.ndarray:
-            x = np.array(x)
-
         # initializing our weights given X
         self.W = np.random.normal(0.0, 0.5, self.N)
+        # getting the number of samples from x len
+        num_samples = len(x)
+
+        # turning D and X into np arrays, if not already
+        if type(d) is not NDArray:
+            d = np.array(d)
+
+        if type(x) is not NDArray:
+            x = np.array(x)
+
+        print(x.shape)
 
         # initializing the arrays to hold error and predictions
-        y = np.zeros(self.N)
-        error = np.zeros(self.N)
+        y = np.zeros(num_samples)
+        error = np.zeros(num_samples)
         # creating an array to track the weight changes over time N
         # self.weight_t = np.zeros(())
 
-        for sample in range(self.N):
+        for sample in range(num_samples):
             # getting the prediction y
             y[sample] = self.predict_y(x[sample])
             # getting the error e[sample] = d[sample] - y[sample]
