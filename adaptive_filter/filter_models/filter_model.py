@@ -13,10 +13,10 @@ class FilterModel:
         """Predicts the output y[n], given vector X[n]. Uses formula W^T[n]X[n]
 
         Args:
-            x_n ndarray: vector[n] of array X
+            x_n (np.ndarray): vector[n] of array X
 
         Returns:
-            y_n float: Predicted output at n
+            np.float64: Predicted output at n
         """
         return np.dot(self.W, x_n)
 
@@ -24,11 +24,11 @@ class FilterModel:
         """Calculates the error, e[n] = d[n] - y[n], y[n] is output of W^T[n]X[n]
 
         Args:
-            d_n float: Desired sample at point n of array D
-            y_n float: Prediction of y[n]
+            d_n (float): Desired sample at point n of array D
+            y_n (float): Prediction of y[n]
 
         Returns:
-            error_n float: error of desired input[n] - predicted input (y[n])
+            float: error of desired input[n] - predicted input (y[n])
         """
         return d_n - y_n
 
@@ -36,11 +36,11 @@ class FilterModel:
         """Updates weights of W[n + 1], given the learning algorithm chosen
 
         Args:
-            e_n float: Error sample at point n
-            x_n ndarray: Input vector n
+            e_n (float): Error sample at point n
+            x_n (np.ndarray): Input vector n
 
         Returns:
-            Update step to self.W
+            np.ndarray: Update step to self.W
         """
         return np.zeros(len(x_n))
 
@@ -48,10 +48,13 @@ class FilterModel:
         """Iterates Adaptive filter alorithm and updates for length of input signal X
 
         Args:
-            d ndarray: Desired Vector array D
-            x ndarray: Input matrix X
+            d (np.ndarray): Desired Vector array D
+            x (np.ndarray): Input matrix X
 
         Returns:
+            tuple: A tuple containing:
+                - np.ndarray: Predicted output signal.
+                - np.ndarray: The error signal of d -y.
         """
 
         # initializing our weights given X
