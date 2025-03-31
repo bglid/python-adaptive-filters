@@ -58,7 +58,8 @@ class FilterModel:
         """
 
         # initializing our weights given X
-        self.W = np.random.normal(0.0, 0.5, self.N)
+        self.W = np.random.normal(0.0, 0.5, x[0].shape)
+        self.W *= 0.001  # setting weights close to zero
         # print(self.W.ndim)
         if self.W.ndim <= 1:
             self.W = self.W.reshape(-1, 1)
