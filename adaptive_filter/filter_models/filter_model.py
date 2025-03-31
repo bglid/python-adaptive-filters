@@ -59,17 +59,31 @@ class FilterModel:
 
         # initializing our weights given X
         self.W = np.random.normal(0.0, 0.5, self.N)
+        # print(self.W.ndim)
+        if self.W.ndim <= 1:
+            self.W = self.W.reshape(-1, 1)
+            # print(self.W.shape)
+        assert self.W.ndim == 2
+
         # getting the number of samples from x len
         num_samples = len(x)
 
         # turning D and X into np arrays, if not already
         if type(d) is not NDArray:
             d = np.array(d)
+        # asserting the shape of d
+        if d.ndim == 1:
+            d = d.reshape(-1, 1)  # making shape (n, 1)
+        assert d.ndim == 2
 
         if type(x) is not NDArray:
             x = np.array(x)
+        # checking X shape
+        if x.ndim == 1:
+            x = x.reshape(-1, 1)  # making shape (n, 1)
+        assert x.ndim == 2
 
-        print(x.shape)
+        # asserting that x and d have the same shape!!
 
         # initializing the arrays to hold error and predictions
         y = np.zeros(num_samples)
@@ -79,10 +93,13 @@ class FilterModel:
 
         for sample in range(num_samples):
             # getting the prediction y
+            # print(f"\t -----DEBUG-----\n")
+            # print(self.predict_y(x[sample]))
             y[sample] = self.predict_y(x[sample])
             # getting the error e[sample] = d[sample] - y[sample]
             error[sample] = self.error(d_n=d[sample], y_n=y[sample])
             # updating the weights
             self.W += self.update_step(e_n=error[sample], x_n=x[sample])
+            # print(f"\t ---------------\n")
 
         return y, error

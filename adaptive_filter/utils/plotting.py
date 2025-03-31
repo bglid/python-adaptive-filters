@@ -8,7 +8,7 @@ PLOTTING UTILS FOR PRESENTING DIFFERNT ALGORITHMS
 
 
 # plot to measure time domain of signal
-def signal_plot(signal, fs):
+def signal_plot(signal):
     """
     Summary: Plot to trace a given signal in the time domain
 
@@ -26,10 +26,3 @@ def signal_plot(signal, fs):
 
 
 # plot to capture the weight changes over time
-
-fs = 44100
-# wave_buffer = np.zeros(shape=(100))
-time = np.arange(0, 1.0, step=(1 / fs))
-sine = 2 * np.sin(2 * np.pi * 4 * time)
-
-signal_plot(sine, fs)
