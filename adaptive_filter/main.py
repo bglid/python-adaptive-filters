@@ -3,6 +3,7 @@
 Main entry point for Adaptive Filter protoyping
 """
 
+import matplotlib.pyplot as plt
 import numpy as np
 
 from adaptive_filter.algorithms.lms import LMS
@@ -16,22 +17,36 @@ def main(clean_signal, noisy_signal, args):
 
     # setting up filter
     # mu = args.mu
-    mu = 0.2
-    lms_af = LMS(mu=mu, n=8)
-    y, error = lms_af.filter(d=clean_signal, x=noisy_signal)
-    # print(f"y: {y}")
-    # print(f"\n Error:{error}")
-    #
-    # print(f"Size: {y.shape}")
+    mu = 0.45
+    lms_af = LMS(mu=mu, n=16)
+    y, error, results = lms_af.filter(
+        d=clean_signal, x=noisy_signal, eval_at_sample=5000
+    )
+
+    # quick plotting
+    # print(len(results["MSE"]))
+    plt.figure(figsize=(10, 6))
+    x_axis = np.arange(0, len(results["MSE"]))
+    plt.plot(x_axis, results["MSE"], c="darkviolet")
+    plt.title("MSE")
+    plt.grid()
+    plt.show()
+
+    plt.figure(figsize=(10, 6))
+    x_axis = np.arange(0, len(results["SNR"]))
+    plt.plot(x_axis, results["SNR"], c="crimson")
+    plt.title("SNR")
+    plt.grid()
+    plt.show()
 
     # plotting the normal signal
-    plotting.signal_plot(clean_signal[9998000:])
+    # plotting.signal_plot(clean_signal[98000:])
 
     # plotting the noisy signal
-    plotting.signal_plot(noisy_signal[9998000:])
+    # plotting.signal_plot(noisy_signal[98000:])
 
     # plotting the new signal!
-    plotting.signal_plot(y[9998000:])
+    # plotting.signal_plot(y[98000:])
     # plotting.signal_plot(error)
 
 
@@ -42,12 +57,12 @@ if __name__ == "__main__":
     # clean signal
     fs = 1000
     frequency = 5
-    time = np.arange(0.0, 10000.0, step=(1 / fs))
+    time = np.arange(0.0, 1000.0, step=(1 / fs))
     clean_signal = 2 * np.sin(2 * np.pi * frequency * time)
 
     # creating noise to create the noisy signal
     noise = np.random.randn(len(time))
     # creating the noisy signal
-    noisy_signal = (noise * 0.75) + clean_signal
+    noisy_signal = (noise * 0.3) + clean_signal
 
     main(clean_signal, noisy_signal, args)

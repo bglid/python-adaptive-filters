@@ -15,7 +15,7 @@ class EvaluationSuite:
         self.algorithm = algorithm
 
     # function for MSE
-    def MSE(self, y: float, y_hat: float):
+    def MSE(self, desired_signal: float, input_signal: float):
         """Calculates the Mean Squared Error = 1/n * sum(y - y_hat)**2
 
         Args:
@@ -25,10 +25,10 @@ class EvaluationSuite:
         Returns:
             float: Mean squared error
         """
-        return np.mean(y - y_hat) ** 2
+        return np.mean(desired_signal - input_signal) ** 2
 
     # function for SNR
-    def SNR(self, signal: float, noise: float):
+    def SNR(self, desired_signal: float, noisy_signal: float):
         """Calculates the Signal to Noise Ratio in dB: SNR = (Power of Signal)/(Power of Noise).
 
         Args:
@@ -40,8 +40,8 @@ class EvaluationSuite:
         """
 
         # First we need to measure signal power and noise power
-        signal_power = np.mean(signal**2)
-        noise_power = np.mean(noise**2)
+        signal_power = np.mean(desired_signal**2)
+        noise_power = np.mean(noisy_signal**2)
         # Now we can return the SNR ratio in dB
         snr = signal_power / noise_power
         return 10 * np.log10(snr)
@@ -81,11 +81,25 @@ class EvaluationSuite:
             dict: Dictionary of evaluation results
         """
 
-        eval_results = collections.defaultdict(float)
+        # eval_results = collections.defaultdict(dict)
+        eval_results = {
+            "MSE": [],
+            "SNR": [],
+        }
 
-        eval_results["MSE"] = self.MSE(desired_signal, input_signal)
+        eval_results["MSE"].append(self.MSE(desired_signal, input_signal))
+        # LMS eval
+        if self.algorithm == "LMS":
+            eval_results["SNR"].append(
+                self.SNR(desired_signal=desired_signal, noisy_signal=input_signal)
+            )
+            # eval_results["Convergence"] = self.lms_convergence_rate(
+            #     step_size, input_signal, k=time_k
+            # )
+
+        return eval_results
 
 
 if __name__ == "__main__":
 
-    evaluation = EvaluationSuite
+    evaluation = EvaluationSuite(algorithm="LMS")

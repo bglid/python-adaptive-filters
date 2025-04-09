@@ -1,6 +1,9 @@
 # Class that contains filter model used by most adaptive filters
 import numpy as np
+from matplotlib.pyplot import waitforbuttonpress
 from numpy.typing import NDArray
+
+from adaptive_filter.utils.evaluation import EvaluationSuite
 
 
 class FilterModel:
@@ -8,6 +11,8 @@ class FilterModel:
         # consider adding p: order
         self.mu = mu  # step_rate
         self.N = n  # filter window size
+        # Algorithm type, defined by subclass algorithm
+        self.algorithm = ""
 
     def predict_y(self, x_n: NDArray[np.float64]) -> NDArray[np.float64]:
         """Predicts the output y[n], given vector X[n]. Uses formula W^T[n]X[n]
@@ -44,12 +49,13 @@ class FilterModel:
         """
         return np.zeros(len(x_n))
 
-    def filter(self, d, x):
+    def filter(self, d, x, eval_at_sample=100):
         """Iterates Adaptive filter alorithm and updates for length of input signal X
 
         Args:
             d (np.ndarray): Desired Vector array D
             x (np.ndarray): Input matrix X
+            eval_at_sample (int): Number of iterations that must pass in order to log output
 
         Returns:
             tuple: A tuple containing:
@@ -68,6 +74,11 @@ class FilterModel:
 
         # getting the number of samples from x len
         num_samples = len(x)
+
+        # creating evaluation object
+        evaluation_runner = EvaluationSuite(algorithm=self.algorithm)
+        # results = np.zeros(shape=(num_samples % eval_at_sample))
+        results = {"MSE": [], "SNR": []}
 
         # turning D and X into np arrays, if not already
         if type(d) is not NDArray:
@@ -94,13 +105,22 @@ class FilterModel:
 
         for sample in range(num_samples):
             # getting the prediction y
-            # print(f"\t -----DEBUG-----\n")
-            # print(self.predict_y(x[sample]))
             y[sample] = self.predict_y(x[sample])
             # getting the error e[sample] = d[sample] - y[sample]
             error[sample] = self.error(d_n=d[sample], y_n=y[sample])
             # updating the weights
             self.W += self.update_step(e_n=error[sample], x_n=x[sample])
-            # print(f"\t ---------------\n")
 
-        return y, error
+            # running eval suite logging if log criteria met
+            assert (
+                eval_at_sample >= 0
+            ), "Please set eval sample criteria to a number greater than zero if logging is desired, else leave at zero"
+            # taking an eval log and appending to results array
+            if (sample + eval_at_sample) % eval_at_sample == 0 and sample > 0:
+                temp_results = evaluation_runner.evaluation(
+                    d[sample], y[sample], self.mu, time_k=sample
+                )
+                results["MSE"].append(temp_results["MSE"])
+                results["SNR"].append(temp_results["SNR"])
+
+        return y, error, results
