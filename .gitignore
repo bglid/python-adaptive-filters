@@ -615,4 +615,6 @@ healthchecksdb
 MigrationBackup/
 
 cookiecutter-config-file.yml
+
+.safety-project.ini
 # End of https://www.gitignore.io/api/osx,python,pycharm,windows,visualstudio,visualstudiocode
