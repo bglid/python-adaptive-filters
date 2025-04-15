@@ -34,6 +34,7 @@ class PlotSuite:
         plt.title(f"{description} of {self.algorithm} algorithm")
         plt.ylabel("Amplitude")  # rotate this
         plt.xlabel(f"Time in {self.N} samples")
+        plt.ylim([-4, 4])
         plt.legend()
         plt.grid()
 
@@ -57,7 +58,7 @@ class PlotSuite:
         plt.plot(x_axis, results[error_metric], c="crimson", label=f"{error_metric}")
         plt.title(error_metric)
         plt.ylabel(error_metric)  # rotate this
-        plt.xlabel(f"Time in {self.N} samples")
+        # plt.xlabel(f"Time in {self.N} samples")
         plt.legend()
         plt.grid()
 

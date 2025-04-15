@@ -1,6 +1,5 @@
 # Class that contains filter model used by most adaptive filters
 import numpy as np
-from matplotlib.pyplot import waitforbuttonpress
 from numpy.typing import NDArray
 
 from adaptive_filter.utils.evaluation import EvaluationSuite
@@ -14,28 +13,28 @@ class FilterModel:
         # Algorithm type, defined by subclass algorithm
         self.algorithm = ""
 
-    def predict_y(self, x_n: NDArray[np.float64]) -> NDArray[np.float64]:
-        """Predicts the output y[n], given vector X[n]. Uses formula W^T[n]X[n]
+    def noise_estimate(self, x_n: NDArray[np.float64]) -> NDArray[np.float64]:
+        """Predicts the noise estimate, given vector X[n], noise reference. Uses formula W^T[n]X[n]
 
         Args:
-            x_n (np.ndarray): vector[n] of array X
+            x_n (np.ndarray): vector[n] of array X, the noise estimate
 
         Returns:
-            np.float64: Predicted output at n
+            np.float64: Predicted noise estimate output of the FIR filter and the noise reference
         """
         return np.dot(self.W, x_n)
 
-    def error(self, d_n: float, y_n: float) -> float:
+    def error(self, d_n: float, noise_estimate: float) -> float:
         """Calculates the error, e[n] = d[n] - y[n], y[n] is output of W^T[n]X[n]
 
         Args:
-            d_n (float): Desired sample at point n of array D
-            y_n (float): Prediction of y[n]
+            d_n (float): Desired sample at point n of array D, noisy input
+            noise_estimate (float): The noise estimate product (y[n])
 
         Returns:
-            float: error of desired input[n] - predicted input (y[n])
+            float: error of (noisy) desired input[n] - noise estimate. Ideally, this should be the clean signal
         """
-        return d_n - y_n
+        return d_n - noise_estimate
 
     def update_step(self, e_n: float, x_n: NDArray[np.float64]) -> NDArray[np.float64]:
         """Updates weights of W[n + 1], given the learning algorithm chosen
@@ -53,14 +52,15 @@ class FilterModel:
         """Iterates Adaptive filter alorithm and updates for length of input signal X
 
         Args:
-            d (np.ndarray): Desired Vector array D
-            x (np.ndarray): Input matrix X
+            d (np.ndarray): "Desired Signal", which in the ANC use-case is the noisy input signal.
+            x (np.ndarray): Input reference matrix X, which in the ANC case is the noise reference.
             eval_at_sample (int): Number of iterations that must pass in order to log output
 
         Returns:
             tuple: A tuple containing:
-                - np.ndarray: Predicted output signal.
-                - np.ndarray: The error signal of d -y.
+                - np.ndarray: "Clean output" - The error signal of d - y
+                - np.ndarray: Predicted noise estimate.
+                - np.ndarray: Vector of the results
         """
 
         # initializing our weights given X
@@ -97,17 +97,19 @@ class FilterModel:
 
         # asserting that x and d have the same shape!!
 
-        # initializing the arrays to hold error and predictions
-        y = np.zeros(num_samples)
+        # initializing the arrays to hold error and noise estimate
+        noise_estimate = np.zeros(num_samples)
         error = np.zeros(num_samples)
         # creating an array to track the weight changes over time N
         # self.weight_t = np.zeros(())
 
         for sample in range(num_samples):
-            # getting the prediction y
-            y[sample] = self.predict_y(x[sample])
+            # getting the prediction y (noise estimate)
+            noise_estimate[sample] = self.noise_estimate(x[sample])
             # getting the error e[sample] = d[sample] - y[sample]
-            error[sample] = self.error(d_n=d[sample], y_n=y[sample])
+            error[sample] = self.error(
+                d_n=d[sample], noise_estimate=noise_estimate[sample]
+            )
             # updating the weights
             self.W += self.update_step(e_n=error[sample], x_n=x[sample])
 
@@ -118,9 +120,9 @@ class FilterModel:
             # taking an eval log and appending to results array
             if (sample + eval_at_sample) % eval_at_sample == 0 and sample > 0:
                 temp_results = evaluation_runner.evaluation(
-                    d[sample], y[sample], self.mu, time_k=sample
+                    d[sample], noise_estimate[sample], self.mu, time_k=sample
                 )
                 results["MSE"].append(temp_results["MSE"])
                 results["SNR"].append(temp_results["SNR"])
 
-        return y, error, results
+        return error, noise_estimate, results
