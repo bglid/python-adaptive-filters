@@ -48,7 +48,9 @@ class FilterModel:
         """
         return np.zeros(len(x_n))
 
-    def filter(self, d, x, eval_at_sample=100):
+    def filter(
+        self, d, x, eval_at_sample=100, clean_signal: NDArray[np.float64] = None
+    ):
         """Iterates Adaptive filter alorithm and updates for length of input signal X
 
         Args:
@@ -117,12 +119,26 @@ class FilterModel:
             assert (
                 eval_at_sample >= 0
             ), "Please set eval sample criteria to a number greater than zero if logging is desired, else leave at zero"
+
             # taking an eval log and appending to results array
             if (sample + eval_at_sample) % eval_at_sample == 0 and sample > 0:
-                temp_results = evaluation_runner.evaluation(
-                    d[sample], noise_estimate[sample], self.mu, time_k=sample
-                )
-                results["MSE"].append(temp_results["MSE"])
-                results["SNR"].append(temp_results["SNR"])
+                if clean_signal is not None:
+                    # Running the plotting suite
+                    temp_results = evaluation_runner.evaluation(
+                        desired_signal=d[sample],
+                        input_signal=noise_estimate[sample],
+                        step_size=self.mu,
+                        time_k=sample,
+                        error_output=error[sample],
+                        clean_signal=clean_signal[sample],
+                    )
+                    results["MSE"].append(temp_results["MSE"])
+                    results["SNR"].append(temp_results["SNR"])
+                else:
+                    # only returning this message on first iter
+                    if sample <= eval_at_sample:
+                        print(
+                            "Please provide clean signal to run full error eval suite."
+                        )
 
         return error, noise_estimate, results

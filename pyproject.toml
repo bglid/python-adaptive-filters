@@ -51,6 +51,11 @@ pytest-html = "^3.1.1"
 pytest-cov = "^6.0.0"
 numpy = "^1.21.0"
 matplotlib = "^3.9.0"
+scikit-learn = "1.6.1"
+librosa = "0.11.0"
+soundfile = "0.13.1"
+
+
 
 [tool.black]
 # https://github.com/psf/black
