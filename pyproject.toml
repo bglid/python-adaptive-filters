@@ -30,7 +30,7 @@ classifiers = [  #! Update me
 
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = ">=3.9.2,<4.0"
 
 [tool.poetry.group.dev.dependencies]
 bandit = "^1.7.1"
@@ -54,6 +54,8 @@ matplotlib = "^3.9.0"
 scikit-learn = "1.6.1"
 librosa = "0.11.0"
 soundfile = "0.13.1"
+cryptography = "44.0.1"
+setuptools = "78.1.1"
 
 
 
