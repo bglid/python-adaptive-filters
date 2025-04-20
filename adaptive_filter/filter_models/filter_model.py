@@ -1,4 +1,6 @@
 # Class that contains filter model used by most adaptive filters
+from typing import Any
+
 import numpy as np
 from numpy.typing import NDArray
 
@@ -13,7 +15,7 @@ class FilterModel:
         # Algorithm type, defined by subclass algorithm
         self.algorithm = ""
 
-    def noise_estimate(self, x_n: NDArray[np.float64]) -> NDArray[np.float64]:
+    def noise_estimate(self, x_n: NDArray[np.float64]) -> np.float64:
         """Predicts the noise estimate, given vector X[n], noise reference. Uses formula W^T[n]X[n]
 
         Args:
@@ -49,14 +51,19 @@ class FilterModel:
         return np.zeros(len(x_n))
 
     def filter(
-        self, d, x, eval_at_sample=100, clean_signal: NDArray[np.float64] = None
-    ):
+        self,
+        d: np.ndarray[Any, np.dtype[np.float64]],
+        x: np.ndarray[Any, np.dtype[np.float64]],
+        clean_signal: np.ndarray[Any, np.dtype[np.float64]],
+        eval_at_sample: int = 100,
+    ) -> tuple:
         """Iterates Adaptive filter alorithm and updates for length of input signal X
 
         Args:
             d (np.ndarray): "Desired Signal", which in the ANC use-case is the noisy input signal.
             x (np.ndarray): Input reference matrix X, which in the ANC case is the noise reference.
             eval_at_sample (int): Number of iterations that must pass in order to log output
+            clean_signal (np.ndarray): Clean signal for final reference.
 
         Returns:
             tuple: A tuple containing:
@@ -80,7 +87,7 @@ class FilterModel:
         # creating evaluation object
         evaluation_runner = EvaluationSuite(algorithm=self.algorithm)
         # results = np.zeros(shape=(num_samples % eval_at_sample))
-        results = {"MSE": [], "SNR": []}
+        results: dict[str, list[Any]] = {"MSE": [], "SNR": []}
 
         # turning D and X into np arrays, if not already
         if type(d) is not NDArray:
@@ -134,11 +141,7 @@ class FilterModel:
                     )
                     results["MSE"].append(temp_results["MSE"])
                     results["SNR"].append(temp_results["SNR"])
-                else:
-                    # only returning this message on first iter
-                    if sample <= eval_at_sample:
-                        print(
-                            "Please provide clean signal to run full error eval suite."
-                        )
+                # if clean_signal is None and sample <= eval_at_sample:
+                #     print("Please provide clean signal to run full error eval suite.")
 
         return error, noise_estimate, results

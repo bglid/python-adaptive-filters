@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
+from types import ModuleType
+from typing import Any, Optional, Union
+
+import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
-from numpy.typing import NDArray
 
 """
 PLOTTING UTILS FOR PRESENTING DIFFERNT ALGORITHMS
@@ -20,13 +23,22 @@ class PlotSuite:
         self.N = num_samples
 
     # plot to measure time domain of signal
-    def signal_plot(self, signal: NDArray, description: str, subplot: bool = False):
+    def signal_plot(
+        self,
+        signal: np.ndarray[Any, np.dtype[Any]],
+        description: str,
+        subplot: bool = False,
+    ) -> Union[None, ModuleType]:
         """
         Summary: Plot to trace a given signal in the time domain
 
         Args:
             signal (np.ndarray): Vector of output signal y_hat
             description (str): String description of plot, used in title
+            subplot (bool): Bool check for if returning as a part of a larger plot.
+
+        Returns:
+            Union[None, ModuleType]: Returns plot when subplot set to True.
 
         """
         # indexing x to get points over time
@@ -41,17 +53,28 @@ class PlotSuite:
         # if its not a subplot, show results
         if subplot is False:
             plt.show()
+            return None
         else:
             return plt
 
     # plot to measure error changes over time
-    def error_plot(self, results: NDArray, error_metric: str, subplot: bool = False):
+    def error_plot(
+        self,
+        results: np.ndarray[Any, np.dtype[Any]],
+        error_metric: str,
+        subplot: bool = False,
+    ) -> Union[None, ModuleType]:
         """
         Summary: Plot to trace the error over time.
 
         Args:
             results (np.ndarray): Vector of error results
             error_metric (str): String description of error_metric, used in title
+            subplot (bool): Bool check for if returning as a part of a larger plot.
+
+        Returns:
+            Union[None, ModuleType]: Returns plot when subplot set to True.
+
         """
         x_axis = np.arange(0, len(results[error_metric]))
         plt.title(f"{error_metric} of {self.algorithm}")
@@ -65,16 +88,23 @@ class PlotSuite:
         # if its not a subplot, show results
         if subplot is False:
             plt.show()
+            return None
         else:
             return plt
 
     # plot to capture the weight changes over time
-    def weight_adjustments(self, weights: NDArray, time_k: int, subplot: bool = False):
+    def weight_adjustments(
+        self,
+        weights: np.ndarray[Any, np.dtype[Any]],
+        time_k: int,
+        subplot: bool = False,
+    ) -> None:
         """Summary: plots the adjustments to the weights over time k.
 
         Args:
             weights (np.ndarray): Vector of weights at time_k
             time_k (int): Iteration number k.
+            subplot (bool): Bool check for if returning as a part of a larger plot.
         """
         pass
 
@@ -87,13 +117,13 @@ class PlotSuite:
     # plot to run all three and return them as subplots in one, if chosen
     def full_plot_suite(
         self,
-        signal: NDArray,
+        signal: np.ndarray[Any, np.dtype[Any]],
         description: str,
-        results: NDArray,
+        results: np.ndarray[Any, np.dtype[Any]],
         error_metric: str,
-        weights: NDArray,
+        weights: np.ndarray[Any, np.dtype[Any]],
         time_k: int,
-    ):
+    ) -> None:
         """Summary: Plots the entire suite of plots available as subplots.
 
         Args:
@@ -104,8 +134,6 @@ class PlotSuite:
             weights (np.ndarray): Vector of weights at time_k
             time_k (int): Iteration number k.
 
-        Returns:
-            matplotlib.pyplot: Full plot containing each available plot as a subplot
         """
         # creating each individual plot as a subplot
         plt.figure(figsize=(14, 8))

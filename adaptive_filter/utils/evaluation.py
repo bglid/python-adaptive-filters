@@ -2,10 +2,10 @@
 EVALUATION METRICS: MSE, SNR, Convergence (rate and time), Misadjustment, Clock time (for algorithm complexity)
 """
 
+from typing import Any
+
 import collections
 import time
-from logging import error
-from os import wait
 
 import numpy as np
 
@@ -16,27 +16,27 @@ class EvaluationSuite:
     def __init__(self, algorithm: str) -> None:
         self.algorithm = algorithm
 
-    def MSE(self, desired_signal: float, input_signal: float):
+    def MSE(self, desired_signal: float, input_signal: float) -> np.float64:
         """Calculates the Mean Squared Error = 1/n * sum(y - y_hat)**2
 
         Args:
-            y (float): Observed or desired value
-            y_hat (float): Prediction of value
+            desired_signal (float): Observed or desired value
+            input_signal (float): Prediction of value
 
         Returns:
-            float: Mean squared error
+            np.float64: Mean squared error
         """
         return np.mean(desired_signal - input_signal) ** 2
 
-    def SNR(self, desired_signal: float, noisy_signal: float):
+    def SNR(self, desired_signal: float, noisy_signal: float) -> Any:
         """Calculates the Signal to Noise Ratio in dB: SNR = (Power of Signal)/(Power of Noise).
 
         Args:
-            signal (float): Input Signal
-            noise (float): Input Noise
+            desired_signal (float): Input Signal
+            noisy_signal (float): Input Noise
 
         Returns:
-            float: SNR Ratio in dB
+            Any: SNR Ratio in dB
         """
 
         # formula is: snr = 10log_10((s)^2 / (s - s_hat)^2)
@@ -50,10 +50,10 @@ class EvaluationSuite:
     # function for Convergance
     def lms_convergence_rate(
         self,
-        step_size,
-        input_signal,
-        k,
-    ):
+        step_size: float,
+        input_signal: np.ndarray[Any, np.dtype[Any]],
+        k: int,
+    ) -> Any:
         """Calculates the first-order convergance rate of the mean-square error dependent on mu and autocorrelation eigenvalue.
         This process is done by first taking the autocorrelation (R) of the input data, X^K, where K indicates time.
         Then, eigendecomposition is run to get the the min eigenvalue, indicating the slowet possible decay,
@@ -94,8 +94,7 @@ class EvaluationSuite:
             dict: Dictionary of evaluation results
         """
 
-        # eval_results = collections.defaultdict(dict)
-        eval_results = {
+        eval_results: dict[str, list[Any]] = {
             "MSE": [],
             "SNR": [],
         }

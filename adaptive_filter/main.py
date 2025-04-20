@@ -25,7 +25,10 @@ def main(clean_signal, noisy_signal, noise, parse_args):
     mu = 0.005
     lms_af = LMS(mu=mu, n=64)
     error, noise_estimate, results = lms_af.filter(
-        d=noisy_signal, x=noise, eval_at_sample=1000, clean_signal=clean_signal
+        d=noisy_signal,
+        x=noise,
+        clean_signal=clean_signal,
+        eval_at_sample=1000,
     )
 
     # quick plotting
@@ -83,20 +86,20 @@ if __name__ == "__main__":
     # # random_noise = (noise * 0.5) + (np.random.randn(len(time)) * 0.5)
 
     # RUNNING SOME ACTUAL TESTS!!!
-    clean_speech = librosa.load(
+    clean_speech_load = librosa.load(
         "./data/evaluation_data/air_conditioner/CleanSpeech_training/clnsp1.wav",
         sr=None,
     )
-    noisy_speech = librosa.load(
+    noisy_speech_load = librosa.load(
         "./data/evaluation_data/air_conditioner/NoisySpeech_training/noisy1_SNRdb_0.0_clnsp1.wav",
         sr=None,
     )
-    noise = librosa.load(
+    noise_load = librosa.load(
         "./data/evaluation_data/air_conditioner/Noise_training/noisy1_SNRdb_0.0.wav",
         sr=None,
     )
-    clean_speech = clean_speech[0]
-    noisy_speech = noisy_speech[0]
-    noise = noise[0]
+    clean_speech = clean_speech_load[0]
+    noisy_speech = noisy_speech_load[0]
+    noise = noise_load[0]
 
     main(clean_speech, noisy_speech, noise, args)
