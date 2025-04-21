@@ -8,20 +8,23 @@ import matplotlib.pyplot as plt
 import numpy as np
 import soundfile as sf
 
-# quick ICA test
-from sklearn.decomposition import NMF, FastICA
-
 from adaptive_filter.algorithms.lms import LMS
+from adaptive_filter.evaluation import run_evaluation
 from adaptive_filter.utils import arg_parsing, plotting
 
+# arg parsing module
+from adaptive_filter.utils.arg_parsing import parse_args
 
-def main(clean_signal, noisy_signal, noise, parse_args):
+
+def main(clean_signal, noisy_signal, noise):
     """Main entry point for AF prototyping"""
 
-    # DEMO test
+    # read in args
+    # args = arg_parsing.parse_args()
+
+    # if script is eval, run eval
 
     # setting up filter
-    # mu = args.mu
     mu = 0.005
     lms_af = LMS(mu=mu, n=64)
     error, noise_estimate, results = lms_af.filter(
@@ -54,14 +57,14 @@ def main(clean_signal, noisy_signal, noise, parse_args):
     plt.show()
 
     # error plots
-    # plt.subplot(2, 1, 1)
-    # mse = plots.error_plot(results=results, error_metric="MSE", subplot=True)
-    #
-    # plt.subplot(2, 1, 2)
-    # snr = plots.error_plot(results=results, error_metric="SNR", subplot=True)
+    plt.subplot(2, 1, 1)
+    mse = plots.error_plot(results=results, error_metric="MSE", subplot=True)
 
-    # plt.tight_layout()
-    # plt.show()
+    plt.subplot(2, 1, 2)
+    snr = plots.error_plot(results=results, error_metric="SNR", subplot=True)
+
+    plt.tight_layout()
+    plt.show()
 
     # testing the result
     sf.write("./data/processed_data/test_1_clean.wav", clean_signal, samplerate=16000)
@@ -70,8 +73,6 @@ def main(clean_signal, noisy_signal, noise, parse_args):
 
 
 if __name__ == "__main__":
-
-    args = arg_parsing.parse_args()
 
     # RUNNING SOME ACTUAL TESTS!!!
     clean_speech_load = librosa.load(
@@ -90,4 +91,4 @@ if __name__ == "__main__":
     noisy_speech = noisy_speech_load[0]
     noise = noise_load[0]
 
-    main(clean_speech, noisy_speech, noise, args)
+    main(clean_speech, noisy_speech, noise)
