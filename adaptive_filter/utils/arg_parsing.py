@@ -18,7 +18,7 @@ def parse_args():
     parser.add_argument(
         "--filter_order",
         type=int,
-        default=4,
+        default=16,
         help="Filter order for Adaptive DSP filter",
     )
     parser.add_argument(
@@ -33,8 +33,30 @@ def parse_args():
     parser.add_argument(
         "--algorithm",
         type=str,
-        choices=["LMS", "RLS"],
+        choices=["LMS", "NLMS" "RLS", "Fx-LMS", "APA", "FD"],
         help="Choice of Adaptive Filter Algorithm to test",
+    )
+
+    parser.add_argument(
+        "--noise",
+        type=str,
+        choices=[
+            "all",
+            "air_conditioner",
+            "babble",
+            "cafe",
+            "munching",
+            "typing",
+            "washer_dryer",
+        ],
+        help="Choice of which noise type to test filter on. If 'all' is selected, runs on every type",
+    )
+
+    parser.add_argument(
+        "--save_result",
+        type=bool,
+        choices=[True, False],
+        help="Choice of whether to save resulting sound and image file",
     )
 
     return parser.parse_args()

@@ -54,14 +54,14 @@ def main(clean_signal, noisy_signal, noise, parse_args):
     plt.show()
 
     # error plots
-    plt.subplot(2, 1, 1)
-    mse = plots.error_plot(results=results, error_metric="MSE", subplot=True)
+    # plt.subplot(2, 1, 1)
+    # mse = plots.error_plot(results=results, error_metric="MSE", subplot=True)
+    #
+    # plt.subplot(2, 1, 2)
+    # snr = plots.error_plot(results=results, error_metric="SNR", subplot=True)
 
-    plt.subplot(2, 1, 2)
-    snr = plots.error_plot(results=results, error_metric="SNR", subplot=True)
-
-    plt.tight_layout()
-    plt.show()
+    # plt.tight_layout()
+    # plt.show()
 
     # testing the result
     sf.write("./data/processed_data/test_1_clean.wav", clean_signal, samplerate=16000)
@@ -72,18 +72,6 @@ def main(clean_signal, noisy_signal, noise, parse_args):
 if __name__ == "__main__":
 
     args = arg_parsing.parse_args()
-
-    # # clean signal
-    # fs = 1000
-    # frequency = 5
-    # time = np.arange(0.0, 1000.0, step=(1 / fs))
-    # clean_signal = 2 * np.sin(2 * np.pi * frequency * time)
-    #
-    # # creating noise to create the noisy signal
-    # noise = np.random.randn(len(time))
-    # # creating the noisy signal
-    # noisy_signal = (noise * 1.5) + clean_signal
-    # # random_noise = (noise * 0.5) + (np.random.randn(len(time)) * 0.5)
 
     # RUNNING SOME ACTUAL TESTS!!!
     clean_speech_load = librosa.load(
