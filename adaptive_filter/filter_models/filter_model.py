@@ -4,7 +4,7 @@ from typing import Any
 import numpy as np
 from numpy.typing import NDArray
 
-from adaptive_filter.utils.evaluation import EvaluationSuite
+from adaptive_filter.utils.metrics import EvaluationSuite
 
 
 class FilterModel:
