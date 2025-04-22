@@ -1,7 +1,3 @@
-from typing import Any
-
-import glob
-
 import pytest
 
 from adaptive_filter.algorithms import apa, frequency_domain, fx_lms, lms, nlms, rls
@@ -12,11 +8,10 @@ from adaptive_filter.filter_models.filter_model import FilterModel
 # test for loading data
 def test_load_data():
     noise, noisy_speech, clean_speech = load_data("air_conditioner")
-    # checking if all lists are the same length
-    list_length = len(noise)
-    assert len(noise) == list_length
-    assert len(noisy_speech) == list_length, "Lists are not the same length"
-    assert len(clean_speech) == list_length, "Lists are not the same length"
+    array_shape = noise.shape
+    assert noise.shape == array_shape
+    assert noisy_speech.shape == array_shape, "Lists are not the same length"
+    assert clean_speech.shape == array_shape, "Lists are not the same length"
 
 
 @pytest.mark.parametrize(

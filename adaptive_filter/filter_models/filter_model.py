@@ -1,8 +1,6 @@
 # Class that contains filter model used by most adaptive filters
 from typing import Any
 
-import statistics
-
 import numpy as np
 from numpy.typing import NDArray
 
@@ -71,9 +69,11 @@ class FilterModel:
 
         Returns:
             tuple: A tuple containing:
-                - np.ndarray: "Clean output" The error signal of d - y
+                - np.ndarray: "Clean output" The error signal of d - y.
                 - np.ndarray: Predicted noise estimate.
-                - np.ndarray: Vector of the results
+                - np.ndarray: Vector of the results.
+                - float: Mean of the MSE across the signal.
+                - float: Mean of the SNR across the signal.
         """
 
         # initializing our weights given X
@@ -85,6 +85,28 @@ class FilterModel:
             # print(self.W.shape)
         assert self.W.ndim == 2
 
+        # turning D and X into np arrays, if not already
+        if type(d) is not np.ndarray:
+            d = np.array(d)
+        # asserting the shape of d
+        if d.ndim == 1:
+            d = d.reshape(-1, 1)  # making shape (n, 1)
+        assert d.ndim == 2
+
+        if type(x) is not np.ndarray:
+            x = np.array(x)
+        # checking X shape
+        if x.ndim == 1:
+            x = x.reshape(-1, 1)  # making shape (n, 1)
+        assert x.ndim == 2
+
+        # need to truncate noise estimate if it's longer than the desired singal
+        if d.shape[0] < x.shape[0]:
+            x = x[: d.shape[0]]
+        if clean_signal.shape[0] < d.shape[0]:
+            d = d[: clean_signal.shape[0]]
+            x = x[: clean_signal.shape[0]]
+
         # getting the number of samples from x len
         num_samples = len(x)
 
@@ -93,26 +115,10 @@ class FilterModel:
         # results = np.zeros(shape=(num_samples % eval_at_sample))
         results: dict[str, list[Any]] = {"MSE": [], "SNR": []}
 
-        # turning D and X into np arrays, if not already
-        if type(d) is not NDArray:
-            d = np.array(d)
-        # asserting the shape of d
-        if d.ndim == 1:
-            d = d.reshape(-1, 1)  # making shape (n, 1)
-        assert d.ndim == 2
-
-        if type(x) is not NDArray:
-            x = np.array(x)
-        # checking X shape
-        if x.ndim == 1:
-            x = x.reshape(-1, 1)  # making shape (n, 1)
-        assert x.ndim == 2
-
-        # asserting that x and d have the same shape!!
-
         # initializing the arrays to hold error and noise estimate
         noise_estimate = np.zeros(num_samples)
         error = np.zeros(num_samples)
+
         # creating an array to track the weight changes over time N
         # self.weight_t = np.zeros(())
 
@@ -152,6 +158,6 @@ class FilterModel:
         # Taking the weighted average if weighted_evaluation is True
         else:
             # This is the mean of each full audio sample
-            weighted_MSE = float(statistics.mean(results["MSE"]))
-            weighted_MSE = float(statistics.mean(results["SNR"]))
-            return error, noise_estimate, results, weighted_MSE, weighted_evaluation
+            weighted_MSE = float(np.mean(results["MSE"]))
+            weighted_SNR = float(np.mean(results["SNR"]))
+            return error, noise_estimate, results, weighted_MSE, weighted_SNR

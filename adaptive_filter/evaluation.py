@@ -2,6 +2,9 @@ from typing import Any
 
 import glob
 
+import librosa
+import numpy as np
+
 from adaptive_filter.algorithms import apa, frequency_domain, fx_lms, lms, nlms, rls
 from adaptive_filter.filter_models.filter_model import FilterModel
 
@@ -26,35 +29,35 @@ def load_data(noise: str, snr_levels: int = 5) -> tuple:
         "Noisy_Speech": f"./data/evaluation_data/{noise}/NoisySpeech_training/",
         "Clean_Speech": f"./data/evaluation_data/{noise}/CleanSpeech_training/",
     }
-    # print(read_paths)
-
     # Loading all the noise files
     noise_wavs = []
-    count = 0
-    for noise in glob.iglob(f"{read_paths['Noise']}/*"):
-        noise_wavs.append(noise)
-        count += 1
-    print(count)
+    for file in glob.iglob(f"{read_paths['Noise']}/*"):
+        noise_file, noise_sr = librosa.load(file, sr=None)
+        noise_wavs.append(noise_file)
+        # print(noise_file.shape)
+    # Turning into np array
+    noise_array = np.array(noise_wavs, dtype=object)
 
     # Loading all the noisy_speech files
     noisy_speech_wavs = []
-    count = 0
-    for noisy_speech in glob.iglob(f"{read_paths['Noisy_Speech']}/*"):
-        noisy_speech_wavs.append(noisy_speech)
-        count += 1
-    print(count)
+    for file in glob.iglob(f"{read_paths['Noisy_Speech']}/*"):
+        noisy_speech_file, noisy_speech_sr = librosa.load(file, sr=None)
+        noisy_speech_wavs.append(noisy_speech_file)
+    # Turning into np array
+    noisy_speech_array = np.array(noisy_speech_wavs, dtype=object)
 
     # Loading all the clean_speech files
     clean_speech_wavs = []
-    count = 0
-    for clean_speech in glob.iglob(f"{read_paths['Clean_Speech']}/*"):
+    for file in glob.iglob(f"{read_paths['Clean_Speech']}/*"):
         # appending extra copies of the speech data depending on SNR level
+        clean_speech_file, clean_speech_sr = librosa.load(file, sr=None)
         for j in range(snr_levels):
-            clean_speech_wavs.append(clean_speech)
-            count += 1
-    print(count)
+            clean_speech_wavs.append(clean_speech_file)
+    # Turning into np array
+    clean_speech_array = np.array(clean_speech_wavs, dtype=object)
 
-    return noise_wavs, noisy_speech_wavs, clean_speech_wavs
+    # return noise_wavs, noisy_speech_wavs, clean_speech_wavs
+    return noise_array, noisy_speech_array, clean_speech_array
 
 
 # function for selecting the filter
@@ -116,25 +119,30 @@ def run_evaluation(
     """
 
     # Loading data from respective data paths
-    noise, noisy_speech, clean_speech = load_data(noise)
+    noise_list, noisy_speech_list, clean_speech_list = load_data(noise)
 
     # getting filter algorithm
-    filter = select_algorithm(filter_order, mu, algorithm)
+    af_filter = select_algorithm(filter_order, mu, algorithm)
+
+    # Allocating arrays for mse and snr results to average
+    all_mse = np.zeros(shape=noise_list.shape[0])
+    all_snr = np.zeros(shape=noise_list.shape[0])
 
     # Run the filtering algorithm per instance of noise
-    for i in range(len(noise)):
-        pass
+    for i in range(noise_list.shape[0]):
+        error, noise_estimate, results, mse_i, snr_i = af_filter.filter(
+            d=noisy_speech_list[i],
+            x=noise_list[i],
+            clean_signal=clean_speech_list[i],
+            eval_at_sample=1000,
+            weighted_evaluation=True,
+        )
+        # appending mean mse and snr to later avg.
+        all_mse[i] = mse_i
+        all_snr[i] = snr_i
 
-    # NOTE: just for example
-    # setting up filter
-    # mu = 0.005
-    # lms_af = LMS(mu=mu, n=64)
-    # error, noise_estimate, results = lms_af.filter(
-    #     d=noisy_signal,
-    #     x=noise,
-    #     clean_signal=clean_signal,
-    #     eval_at_sample=1000,
-    # )
+    print(all_mse.shape)
+    print(all_snr.shape)
 
 
 if __name__ == "__main__":
