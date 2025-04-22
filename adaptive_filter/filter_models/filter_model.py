@@ -1,6 +1,8 @@
 # Class that contains filter model used by most adaptive filters
 from typing import Any
 
+import statistics
+
 import numpy as np
 from numpy.typing import NDArray
 
@@ -8,10 +10,10 @@ from adaptive_filter.utils.metrics import EvaluationSuite
 
 
 class FilterModel:
-    def __init__(self, mu: float, n: int) -> None:
+    def __init__(self, mu: float, filter_order: int) -> None:
         # consider adding p: order
         self.mu = mu  # step_rate
-        self.N = n  # filter window size
+        self.N = filter_order  # filter window size
         # Algorithm type, defined by subclass algorithm
         self.algorithm = ""
 
@@ -56,6 +58,7 @@ class FilterModel:
         x: np.ndarray[Any, np.dtype[np.float64]],
         clean_signal: np.ndarray[Any, np.dtype[np.float64]],
         eval_at_sample: int = 100,
+        weighted_evaluation: bool = False,
     ) -> tuple:
         """Iterates Adaptive filter alorithm and updates for length of input signal X
 
@@ -64,10 +67,11 @@ class FilterModel:
             x (np.ndarray): Input reference matrix X, which in the ANC case is the noise reference.
             eval_at_sample (int): Number of iterations that must pass in order to log output
             clean_signal (np.ndarray): Clean signal for final reference.
+            weighted_evaluation (bool): Whether the evaluation average should be weighted.
 
         Returns:
             tuple: A tuple containing:
-                - np.ndarray: "Clean output" - The error signal of d - y
+                - np.ndarray: "Clean output" The error signal of d - y
                 - np.ndarray: Predicted noise estimate.
                 - np.ndarray: Vector of the results
         """
@@ -141,7 +145,13 @@ class FilterModel:
                     )
                     results["MSE"].append(temp_results["MSE"])
                     results["SNR"].append(temp_results["SNR"])
-                # if clean_signal is None and sample <= eval_at_sample:
-                #     print("Please provide clean signal to run full error eval suite.")
 
-        return error, noise_estimate, results
+        # returning as normal if not a weighted eval
+        if weighted_evaluation is False:
+            return error, noise_estimate, results
+        # Taking the weighted average if weighted_evaluation is True
+        else:
+            # This is the mean of each full audio sample
+            weighted_MSE = float(statistics.mean(results["MSE"]))
+            weighted_MSE = float(statistics.mean(results["SNR"]))
+            return error, noise_estimate, results, weighted_MSE, weighted_evaluation
