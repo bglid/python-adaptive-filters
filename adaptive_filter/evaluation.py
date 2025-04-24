@@ -148,8 +148,10 @@ def noise_evaluation(
         all_snr[i] = snr_i
 
     # taking the mean of the metrics for this noise
-    mean_results[f"{algorithm} Mean MSE: {noise} noise "] = np.mean(all_mse)
-    mean_results[f"{algorithm} Mean SNR: {noise} noise "] = np.mean(all_snr)
+    mean_results[f"{algorithm} Mean MSE: {noise} noise"] = np.mean(all_mse)
+    mean_results[f"{algorithm} Mean SNR: {noise} noise"] = np.mean(all_snr)
+    print("Checking mean results")
+    print(mean_results)
 
     return mean_results
 
@@ -207,14 +209,16 @@ def full_evaluation(
                 eval_at_sample,
             )
 
-            final_results[f"{algorithm} All {noise} results "] = result
-            print(f"Run resuls: \t{final_results}")
+            final_results[f"{algorithm} All {valid_noise[i]} results "] = result
+            print(f"Run resuls: \t{result}")
 
             # writing the results to a csv to the data directory
             fields = [
-                f"{algorithm} Mean MSE: {valid_noise[i]} noise ",
+                f"{algorithm} Mean MSE: {valid_noise[i]} noise",
                 f"{algorithm} Mean SNR: {valid_noise[i]} noise",
             ]
+            print(fields[0])
+            print(fields[1])
             # writing each
             with open(
                 f"./data/tabular_results/{algorithm}/{valid_noise[i]}_results.csv",
@@ -231,6 +235,8 @@ def full_evaluation(
                 )
             # logging feedback that noise type was written
             print(f"{valid_noise[i]} type written!")
+            print(f"Results: \n{result[fields[0]]} \n{result[fields[1]]}")
+            print(f"----------------------------------------")
 
         print(f" FINAL RESULTS!!! \n{final_results}")
         return final_results

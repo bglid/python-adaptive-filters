@@ -26,26 +26,26 @@ class EvaluationSuite:
         Returns:
             np.float64: Mean squared error
         """
-        return np.mean(desired_signal - input_signal) ** 2
+        return np.mean((desired_signal - input_signal) ** 2)
 
     def SNR(self, desired_signal: float, noisy_signal: float) -> Any:
         """Calculates the Signal to Noise Ratio in dB: SNR = (Power of Signal)/(Power of Noise).
 
         Args:
-            desired_signal (float): Input Signal
-            noisy_signal (float): Input Noise
+            desired_signal (float): Input Signal (usually clean)
+            noisy_signal (float): Input Noisy speech (error usually)
 
         Returns:
-            Any: SNR Ratio in dB
+            Any: SNR in dB
         """
-
         # formula is: snr = 10log_10((s)^2 / (s - s_hat)^2)
         "$$SNR = 10 log_{10}\\frac{s^{⊤}s}{(s − ˆs)^{⊤}(s − ˆs)}$$"
         signal_power = np.mean(desired_signal**2)
-        noise_power = np.mean(noisy_signal**2)
+        # calculating the residual noise: clean - error output
+        noise_power = np.mean((desired_signal - noisy_signal) ** 2) + 1e-12
         # Now we can return the SNR ratio in dB
-        snr = signal_power / (noise_power + 1e-10)
-        return 10 * np.log10(snr + 1e-10)
+        snr = signal_power / (noise_power)
+        return 10 * np.log10(snr + 1e-14)
 
     # function for Convergance
     def lms_convergence_rate(
