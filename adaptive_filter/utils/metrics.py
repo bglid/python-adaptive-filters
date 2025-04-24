@@ -33,7 +33,7 @@ class EvaluationSuite:
 
         Args:
             desired_signal (float): Input Signal (usually clean)
-            processed_signal (float): Input Noisy speech (error usually)
+            noisy_signal(float): Input Noisy speech (error usually)
 
         Returns:
             Any: SNR in dB
