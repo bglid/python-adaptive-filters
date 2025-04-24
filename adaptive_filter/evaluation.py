@@ -114,10 +114,13 @@ def noise_evaluation(
         filter_order (int): The n-value of the filter window size.
         mu (float): Learning rate parameter (Mu).
         algorithm (str): Adaptive Filter Algorithm to be used.
-        noise (str): Which noise type with be evaluated. Points to directories containing all related data.
+        noise (str):
+            Which noise type with be evaluated. Points to directories containing all related data.
         snr_levels (int): How many differing SNR levels are tested. Default is 5.
-        save_result (bool): Whether or not individual .wav files and plots should be written or saved. Default is False.
-        eval_at_sample (int): At n samples an evaluation should be taken. Smaller values mean more evaluations.
+        save_result (bool):
+            Whether or not individual .wav files and plots should be written or saved. Default is False.
+        eval_at_sample (int):
+            At n samples an evaluation should be taken. Smaller values mean more evaluations.
 
     Returns:
         dict: Dictionary of mean result for each metric for provided noise set.
@@ -171,10 +174,13 @@ def full_evaluation(
         filter_order (int): The n-value of the filter window size.
         mu (float): Learning rate parameter (Mu).
         algorithm (str): Adaptive Filter Algorithm to be used.
-        noise (str): String of noise type to run evaluation metrics on. If all, runs every metric
+        noise (str):
+            String of noise type to run evaluation metrics on. If all, runs every metric
         snr_levels (int): How many differing SNR levels are tested. Default is 5.
-        save_result (bool): Whether or not individual .wav files and plots should be written or saved. Default is False.
-        eval_at_sample (int): At n samples an evaluation should be taken. Smaller values mean more evaluations.
+        save_result (bool):
+            Whether or not individual .wav files and plots should be written or saved. Default is False.
+        eval_at_sample (int):
+            At n samples an evaluation should be taken. Smaller values mean more evaluations.
 
     Returns:
         dict: Dictionary of dictionaries, each containing the metrics for a given noise type.

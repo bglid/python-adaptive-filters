@@ -19,7 +19,7 @@ class FilterModel:
         """Predicts the noise estimate, given vector X[n], noise reference. Uses formula W^T[n]X[n]
 
         Args:
-            x_n (np.ndarray): vector[n] of array X, the noise estimate
+            x_n (NDArray[np.float64]): vector[n] of array X, the noise estimate
 
         Returns:
             np.float64: Predicted noise estimate output of the FIR filter and the noise reference
@@ -43,35 +43,40 @@ class FilterModel:
 
         Args:
             e_n (float): Error sample at point n
-            x_n (np.ndarray): Input vector n
+            x_n (NDArray[np.float64]): Input vector n
 
         Returns:
-            np.ndarray: Update step to self.W
+            NDArray[np.float64]: Update step to self.W
         """
         return np.zeros(len(x_n))
 
     def filter(
         self,
-        d: np.ndarray[Any, np.dtype[np.float64]],
-        x: np.ndarray[Any, np.dtype[np.float64]],
-        clean_signal: np.ndarray[Any, np.dtype[np.float64]],
+        d: NDArray[np.float64],
+        x: NDArray[np.float64],
+        clean_signal: NDArray[np.float64],
         eval_at_sample: int = 100,
         weighted_evaluation: bool = False,
     ) -> tuple:
         """Iterates Adaptive filter alorithm and updates for length of input signal X
 
         Args:
-            d (np.ndarray): "Desired Signal", which in the ANC use-case is the noisy input signal.
-            x (np.ndarray): Input reference matrix X, which in the ANC case is the noise reference.
-            eval_at_sample (int): Number of iterations that must pass in order to log output
-            clean_signal (np.ndarray): Clean signal for final reference.
-            weighted_evaluation (bool): Whether the evaluation average should be weighted.
+            d (NDArray[np.float64]):
+                "Desired Signal", which in the ANC use-case is the noisy input signal.
+            x (NDArray[np.float64]):
+                Input reference matrix X, which in the ANC case is the noise reference.
+            clean_signal (NDArray[np.float64]):
+                Clean signal for final reference.
+            eval_at_sample (int):
+                Number of iterations that must pass in order to log output
+            weighted_evaluation (bool):
+                Whether the evaluation average should be weighted.
 
         Returns:
             tuple: A tuple containing:
-                - np.ndarray: "Clean output" The error signal of d - y.
-                - np.ndarray: Predicted noise estimate.
-                - np.ndarray: Vector of the results.
+                - NDArray[np.float64]: "Clean output" The error signal of d - y.
+                - NDArray[np.float64]: Predicted noise estimate.
+                - NDArray[np.float64]: Vector of the results.
                 - float: Mean of the MSE across the signal.
                 - float: Mean of the SNR across the signal.
         """
@@ -79,7 +84,6 @@ class FilterModel:
         # initializing our weights given X
         self.W = np.random.normal(0.0, 0.5, x[0].shape)
         self.W *= 0.001  # setting weights close to zero
-        # print(self.W.ndim)
         if self.W.ndim <= 1:
             self.W = self.W.reshape(-1, 1)
             # print(self.W.shape)
@@ -112,8 +116,11 @@ class FilterModel:
 
         # creating evaluation object
         evaluation_runner = EvaluationSuite(algorithm=self.algorithm)
-        # results = np.zeros(shape=(num_samples % eval_at_sample))
-        results: dict[str, list[Any]] = {"MSE": [], "SNR": []}
+        results: dict[str, list[Any]] = {
+            "Adaption_MSE": [],
+            "Speech_MSE": [],
+            "SNR": [],
+        }
 
         # initializing the arrays to hold error and noise estimate
         noise_estimate = np.zeros(num_samples)
@@ -132,26 +139,26 @@ class FilterModel:
             # updating the weights
             self.W += self.update_step(e_n=error[sample], x_n=x[sample])
 
-            # running eval suite logging if log criteria met
-            assert (
-                eval_at_sample >= 0
-            ), "Please set eval sample criteria to a number greater than zero if logging is desired, else leave at zero"
+        # feedback log
+        print(f"\n\tSignal finished processing....\n")
 
-            # NOTE: NEED TO ADJUST EVERYTHIN BELOW
-            # taking an eval log and appending to results array
-            if (sample + eval_at_sample) % eval_at_sample == 0 and sample > 0:
-                if clean_signal is not None:
-                    # Running the plotting suite
-                    temp_results = evaluation_runner.evaluation(
-                        desired_signal=d[sample],
-                        input_signal=noise_estimate[sample],
-                        step_size=self.mu,
-                        time_k=sample,
-                        error_output=error[sample],
-                        clean_signal=clean_signal[sample],
-                    )
-                    results["MSE"].append(temp_results["MSE"])
-                    results["SNR"].append(temp_results["SNR"])
+        # running the full signal for total metrics per signal
+        if clean_signal is not None:
+
+            # to avoid memory issues, need to ensure signals are same shape
+            d_flat, y_flat, clean_flat, error_flat = evaluation_runner.signal_reshaper(
+                d, noise_estimate, clean_signal, error
+            )
+
+            # What LMS minimized
+            adaption_mse_result = evaluation_runner.MSE(d_flat, y_flat)
+            results["Adaption_MSE"].append(adaption_mse_result)
+            # How close e[n] is to s[n]
+            speech_mse_result = evaluation_runner.MSE(clean_flat, error_flat)
+            results["Speech_MSE"].append(speech_mse_result)
+            # full SNR
+            snr_result = evaluation_runner.SNR(clean_flat, error_flat)
+            results["SNR"].append(snr_result)
 
         # returning as normal if not a weighted eval
         if weighted_evaluation is False:
