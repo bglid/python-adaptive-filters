@@ -137,6 +137,7 @@ class FilterModel:
                 eval_at_sample >= 0
             ), "Please set eval sample criteria to a number greater than zero if logging is desired, else leave at zero"
 
+            # NOTE: NEED TO ADJUST EVERYTHIN BELOW
             # taking an eval log and appending to results array
             if (sample + eval_at_sample) % eval_at_sample == 0 and sample > 0:
                 if clean_signal is not None:

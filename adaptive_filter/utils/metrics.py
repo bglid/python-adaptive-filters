@@ -33,19 +33,26 @@ class EvaluationSuite:
 
         Args:
             desired_signal (float): Input Signal (usually clean)
-            noisy_signal (float): Input Noisy speech (error usually)
+            processed_signal (float): Input Noisy speech (error usually)
 
         Returns:
             Any: SNR in dB
         """
         # formula is: snr = 10log_10((s)^2 / (s - s_hat)^2)
         "$$SNR = 10 log_{10}\\frac{s^{⊤}s}{(s − ˆs)^{⊤}(s − ˆs)}$$"
+        # Need to account for when speech is silent...
+
+        energy_thresh = 1e-6
         signal_power = np.mean(desired_signal**2)
+        # returning zero if signal power is less than the energy thresh, meaning no speech
+        if signal_power < energy_thresh:
+            return 0
         # calculating the residual noise: clean - error output
         noise_power = np.mean((desired_signal - noisy_signal) ** 2) + 1e-12
         # Now we can return the SNR ratio in dB
         snr = signal_power / (noise_power)
-        return 10 * np.log10(snr + 1e-14)
+        # print(f"Global SNR: {10 * np.log10(snr)}")
+        return 10 * np.log10(snr + 1e-12)
 
     # function for Convergance
     def lms_convergence_rate(

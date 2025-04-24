@@ -163,7 +163,7 @@ def full_evaluation(
     noise: str,
     snr_levels: int = 5,
     save_result: bool = False,
-    eval_at_sample: int = 1000,
+    eval_at_sample: int = 10,
 ) -> dict[str, dict[str, float]]:
     """Runs the evaluation aggregated evalutaion metrics for each noise type provided. Writes final results to a .csv.
 
