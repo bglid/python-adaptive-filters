@@ -74,7 +74,8 @@ class FilterModel:
                 - NDArray[np.float64]: Predicted noise estimate.
                 - float: Mean of the Adaption MSE across the signal.
                 - float: Mean of the Speech MSE across the signal.
-                - float: Mean of the SNR across the signal.
+                - float: Global SNR across the signal.
+                - float: Delta SNR improvement
                 - float: Clock-time of filter performance
         """
 
@@ -148,7 +149,8 @@ class FilterModel:
         # full SNR
         snr_result = evaluation_runner.SNR(clean_flat, error_flat)
         # # getting the Delta SNR
-        # delta_snr = snr_result - evaluation_runner.SNR(clean_flat, d_flat)
+        snr_in = evaluation_runner.SNR(clean_flat, d_flat)  # SNR without filtering
+        delta_snr = snr_result - snr_in
 
         return (
             error,
@@ -156,6 +158,6 @@ class FilterModel:
             adaption_mse_result,
             speech_mse_result,
             snr_result,
-            # delta_snr,
+            delta_snr,
             elapsed_time,
         )

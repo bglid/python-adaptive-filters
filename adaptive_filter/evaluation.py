@@ -2,7 +2,9 @@ from typing import Any
 
 import csv
 import glob
+import time
 
+import cowsay
 import librosa
 import numpy as np
 
@@ -134,11 +136,12 @@ def noise_evaluation(
     all_adapt_mse = np.zeros(shape=noise_list.shape[0])
     all_speech_mse = np.zeros(shape=noise_list.shape[0])
     all_snr = np.zeros(shape=noise_list.shape[0])
+    all_delta_snr = np.zeros(shape=noise_list.shape[0])
     all_time = np.zeros(shape=noise_list.shape[0])
 
     # Run the filtering algorithm per instance of noise
     for i in range(noise_list.shape[0]):
-        error, noise_estimate, adapt_mse_i, speech_mse_i, snr_i, time_i = (
+        error, noise_estimate, adapt_mse_i, speech_mse_i, snr_i, delta_snr_i, time_i = (
             af_filter.filter(
                 d=noisy_speech_list[i],
                 x=noise_list[i],
@@ -149,12 +152,16 @@ def noise_evaluation(
         all_adapt_mse[i] = adapt_mse_i
         all_speech_mse[i] = speech_mse_i
         all_snr[i] = snr_i
+        print(f"\nSNR global: {snr_i}\n")
+        all_delta_snr[i] = delta_snr_i
+        print(f"SNR Delta: {delta_snr_i}\n")
         all_time[i] = time_i
 
     # taking the mean of the metrics for this noise
     mean_results[f"{algorithm} Adaption MSE: {noise} noise"] = np.mean(all_adapt_mse)
     mean_results[f"{algorithm} Speech MSE: {noise} noise"] = np.mean(all_speech_mse)
     mean_results[f"{algorithm} Mean SNR: {noise} noise"] = np.mean(all_snr)
+    mean_results[f"{algorithm} Mean Delta SNR: {noise} noise"] = np.mean(all_delta_snr)
     mean_results[f"{algorithm} Mean Clock-time: {noise} noise"] = np.mean(all_time)
     print("Checking mean results")
     print(mean_results)
@@ -198,6 +205,8 @@ def full_evaluation(
     final_results: dict[str, dict[str, float]] = {}
     # check if 'all' is passed as a noise type
     if noise == "all":
+        # start the timer!
+        start_time = time.perf_counter()
         # Run the evaluation for each noise type
         for i in range(len(valid_noise)):
             # getting results from noise eval function
@@ -222,12 +231,14 @@ def full_evaluation(
                 f"{algorithm} Adaption MSE: {valid_noise[i]} noise",
                 f"{algorithm} Speech MSE: {valid_noise[i]} noise",
                 f"{algorithm} Mean SNR: {valid_noise[i]} noise",
+                f"{algorithm} Mean Delta SNR: {valid_noise[i]} noise",
                 f"{algorithm} Mean Clock-time: {valid_noise[i]} noise",
             ]
             print(fields[0])
             print(fields[1])
             print(fields[2])
             print(fields[3])
+            print(fields[4])
             # writing each
             with open(
                 f"./data/tabular_results/{algorithm}/{valid_noise[i]}_results.csv",
@@ -242,16 +253,29 @@ def full_evaluation(
                         fields[1]: result[fields[1]],
                         fields[2]: result[fields[2]],
                         fields[3]: result[fields[3]],
+                        fields[4]: result[fields[4]],
                     }
                 )
             # logging feedback that noise type was written
             print(f"{valid_noise[i]} type written!")
             print(
-                f"Results: \n-Adaption MSE: \t{result[fields[0]]} \n-Speech MSE: \t{result[fields[1]]} \n-Mean SNR: \t{result[fields[2]]} \n-Mean Clock-time: \t{result[fields[3]]}"
+                f"Results: \n-Adaption MSE: \t{result[fields[0]]} \n-Speech MSE: \t{result[fields[1]]}"
+            )
+            print(
+                f"\n-Mean SNR: \t{result[fields[2]]} \n-Mean Delta SNR: \t{result[fields[3]]} \n-Mean Clock-time: \t{result[fields[4]]}"
             )
             print("----------------------------------------")
 
-        print(f" FINAL RESULTS!!! \n{final_results}")
+        # Stop the timer!
+        total_elapsed_time = time.perf_counter() - start_time
+        print(f"Evaluation procedure completed in {total_elapsed_time:.3f} seconds.")
+        print(
+            cowsay.get_output_string(
+                "cow",
+                "Evaluation procedure completed in {total_elapsed_time:.3f} seconds.",
+            )
+        )
+        # print(f" FINAL RESULTS!!! \n{final_results}")
         return final_results
 
     # else, we need to give feedback that input is incorrect
