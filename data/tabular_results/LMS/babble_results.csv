@@ -1,2 +1,2 @@
-LMS Mean MSE: babble noise,LMS Mean SNR: babble noise
-0.004051478213595569,-9.30929708533897
+LMS Adaption MSE: babble noise,LMS Speech MSE: babble noise,LMS Mean SNR: babble noise,LMS Mean Clock-time: babble noise
+0.004073881075794426,0.007184673636899236,-3.28290644348184,0.9356048228925496

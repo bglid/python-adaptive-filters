@@ -1,6 +1,8 @@
 # Class that contains filter model used by most adaptive filters
 from typing import Any
 
+import time
+
 import numpy as np
 from numpy.typing import NDArray
 
@@ -55,8 +57,6 @@ class FilterModel:
         d: NDArray[np.float64],
         x: NDArray[np.float64],
         clean_signal: NDArray[np.float64],
-        eval_at_sample: int = 100,
-        weighted_evaluation: bool = False,
     ) -> tuple:
         """Iterates Adaptive filter alorithm and updates for length of input signal X
 
@@ -67,18 +67,15 @@ class FilterModel:
                 Input reference matrix X, which in the ANC case is the noise reference.
             clean_signal (NDArray[np.float64]):
                 Clean signal for final reference.
-            eval_at_sample (int):
-                Number of iterations that must pass in order to log output
-            weighted_evaluation (bool):
-                Whether the evaluation average should be weighted.
 
         Returns:
             tuple: A tuple containing:
                 - NDArray[np.float64]: "Clean output" The error signal of d - y.
                 - NDArray[np.float64]: Predicted noise estimate.
-                - NDArray[np.float64]: Vector of the results.
-                - float: Mean of the MSE across the signal.
+                - float: Mean of the Adaption MSE across the signal.
+                - float: Mean of the Speech MSE across the signal.
                 - float: Mean of the SNR across the signal.
+                - float: Clock-time of filter performance
         """
 
         # initializing our weights given X
@@ -116,11 +113,6 @@ class FilterModel:
 
         # creating evaluation object
         evaluation_runner = EvaluationSuite(algorithm=self.algorithm)
-        results: dict[str, list[Any]] = {
-            "Adaption_MSE": [],
-            "Speech_MSE": [],
-            "SNR": [],
-        }
 
         # initializing the arrays to hold error and noise estimate
         noise_estimate = np.zeros(num_samples)
@@ -129,6 +121,8 @@ class FilterModel:
         # creating an array to track the weight changes over time N
         # self.weight_t = np.zeros(())
 
+        # clock-time for how long filtering this signal takes
+        start_time = time.perf_counter()
         for sample in range(num_samples):
             # getting the prediction y (noise estimate)
             noise_estimate[sample] = self.noise_estimate(x[sample])
@@ -139,33 +133,29 @@ class FilterModel:
             # updating the weights
             self.W += self.update_step(e_n=error[sample], x_n=x[sample])
 
-        # feedback log
-        print(f"\n\tSignal finished processing....\n")
+        # taking clock-time before running metrics
+        elapsed_time = time.perf_counter() - start_time
 
-        # running the full signal for total metrics per signal
-        if clean_signal is not None:
+        # to avoid memory issues, need to ensure signals are same shape
+        d_flat, y_flat, clean_flat, error_flat = evaluation_runner.signal_reshaper(
+            d, noise_estimate, clean_signal, error
+        )
 
-            # to avoid memory issues, need to ensure signals are same shape
-            d_flat, y_flat, clean_flat, error_flat = evaluation_runner.signal_reshaper(
-                d, noise_estimate, clean_signal, error
-            )
+        # What LMS minimized
+        adaption_mse_result = evaluation_runner.MSE(d_flat, y_flat)
+        # How close e[n] is to s[n]
+        speech_mse_result = evaluation_runner.MSE(clean_flat, error_flat)
+        # full SNR
+        snr_result = evaluation_runner.SNR(clean_flat, error_flat)
+        # # getting the Delta SNR
+        # delta_snr = snr_result - evaluation_runner.SNR(clean_flat, d_flat)
 
-            # What LMS minimized
-            adaption_mse_result = evaluation_runner.MSE(d_flat, y_flat)
-            results["Adaption_MSE"].append(adaption_mse_result)
-            # How close e[n] is to s[n]
-            speech_mse_result = evaluation_runner.MSE(clean_flat, error_flat)
-            results["Speech_MSE"].append(speech_mse_result)
-            # full SNR
-            snr_result = evaluation_runner.SNR(clean_flat, error_flat)
-            results["SNR"].append(snr_result)
-
-        # returning as normal if not a weighted eval
-        if weighted_evaluation is False:
-            return error, noise_estimate, results
-        # Taking the weighted average if weighted_evaluation is True
-        else:
-            # This is the mean of each full audio sample
-            weighted_MSE = float(np.mean(results["MSE"]))
-            weighted_SNR = float(np.mean(results["SNR"]))
-            return error, noise_estimate, results, weighted_MSE, weighted_SNR
+        return (
+            error,
+            noise_estimate,
+            adaption_mse_result,
+            speech_mse_result,
+            snr_result,
+            # delta_snr,
+            elapsed_time,
+        )

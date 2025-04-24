@@ -106,7 +106,6 @@ def noise_evaluation(
     noise: str,
     snr_levels: int = 5,
     save_result: bool = False,
-    eval_at_sample: int = 1000,
 ) -> dict[str, float]:
     """Iterates Adaptive filter algorithm over full dataset of noise, returning Average result. NOTE: Files must be presorted
 
@@ -119,8 +118,6 @@ def noise_evaluation(
         snr_levels (int): How many differing SNR levels are tested. Default is 5.
         save_result (bool):
             Whether or not individual .wav files and plots should be written or saved. Default is False.
-        eval_at_sample (int):
-            At n samples an evaluation should be taken. Smaller values mean more evaluations.
 
     Returns:
         dict: Dictionary of mean result for each metric for provided noise set.
@@ -134,25 +131,31 @@ def noise_evaluation(
     af_filter = select_algorithm(filter_order, mu, algorithm)
 
     # Allocating arrays for mse and snr results to average
-    all_mse = np.zeros(shape=noise_list.shape[0])
+    all_adapt_mse = np.zeros(shape=noise_list.shape[0])
+    all_speech_mse = np.zeros(shape=noise_list.shape[0])
     all_snr = np.zeros(shape=noise_list.shape[0])
+    all_time = np.zeros(shape=noise_list.shape[0])
 
     # Run the filtering algorithm per instance of noise
     for i in range(noise_list.shape[0]):
-        error, noise_estimate, results, mse_i, snr_i = af_filter.filter(
-            d=noisy_speech_list[i],
-            x=noise_list[i],
-            clean_signal=clean_speech_list[i],
-            eval_at_sample=1000,
-            weighted_evaluation=True,
+        error, noise_estimate, adapt_mse_i, speech_mse_i, snr_i, time_i = (
+            af_filter.filter(
+                d=noisy_speech_list[i],
+                x=noise_list[i],
+                clean_signal=clean_speech_list[i],
+            )
         )
         # appending mean mse and snr to later avg.
-        all_mse[i] = mse_i
+        all_adapt_mse[i] = adapt_mse_i
+        all_speech_mse[i] = speech_mse_i
         all_snr[i] = snr_i
+        all_time[i] = time_i
 
     # taking the mean of the metrics for this noise
-    mean_results[f"{algorithm} Mean MSE: {noise} noise"] = np.mean(all_mse)
+    mean_results[f"{algorithm} Adaption MSE: {noise} noise"] = np.mean(all_adapt_mse)
+    mean_results[f"{algorithm} Speech MSE: {noise} noise"] = np.mean(all_speech_mse)
     mean_results[f"{algorithm} Mean SNR: {noise} noise"] = np.mean(all_snr)
+    mean_results[f"{algorithm} Mean Clock-time: {noise} noise"] = np.mean(all_time)
     print("Checking mean results")
     print(mean_results)
 
@@ -166,7 +169,6 @@ def full_evaluation(
     noise: str,
     snr_levels: int = 5,
     save_result: bool = False,
-    eval_at_sample: int = 10,
 ) -> dict[str, dict[str, float]]:
     """Runs the evaluation aggregated evalutaion metrics for each noise type provided. Writes final results to a .csv.
 
@@ -179,8 +181,6 @@ def full_evaluation(
         snr_levels (int): How many differing SNR levels are tested. Default is 5.
         save_result (bool):
             Whether or not individual .wav files and plots should be written or saved. Default is False.
-        eval_at_sample (int):
-            At n samples an evaluation should be taken. Smaller values mean more evaluations.
 
     Returns:
         dict: Dictionary of dictionaries, each containing the metrics for a given noise type.
@@ -212,7 +212,6 @@ def full_evaluation(
                 valid_noise[i],
                 snr_levels,
                 save_result,
-                eval_at_sample,
             )
 
             final_results[f"{algorithm} All {valid_noise[i]} results "] = result
@@ -220,11 +219,15 @@ def full_evaluation(
 
             # writing the results to a csv to the data directory
             fields = [
-                f"{algorithm} Mean MSE: {valid_noise[i]} noise",
+                f"{algorithm} Adaption MSE: {valid_noise[i]} noise",
+                f"{algorithm} Speech MSE: {valid_noise[i]} noise",
                 f"{algorithm} Mean SNR: {valid_noise[i]} noise",
+                f"{algorithm} Mean Clock-time: {valid_noise[i]} noise",
             ]
             print(fields[0])
             print(fields[1])
+            print(fields[2])
+            print(fields[3])
             # writing each
             with open(
                 f"./data/tabular_results/{algorithm}/{valid_noise[i]}_results.csv",
@@ -237,12 +240,16 @@ def full_evaluation(
                     {
                         fields[0]: result[fields[0]],
                         fields[1]: result[fields[1]],
+                        fields[2]: result[fields[2]],
+                        fields[3]: result[fields[3]],
                     }
                 )
             # logging feedback that noise type was written
             print(f"{valid_noise[i]} type written!")
-            print(f"Results: \n{result[fields[0]]} \n{result[fields[1]]}")
-            print(f"----------------------------------------")
+            print(
+                f"Results: \n-Adaption MSE: \t{result[fields[0]]} \n-Speech MSE: \t{result[fields[1]]} \n-Mean SNR: \t{result[fields[2]]} \n-Mean Clock-time: \t{result[fields[3]]}"
+            )
+            print("----------------------------------------")
 
         print(f" FINAL RESULTS!!! \n{final_results}")
         return final_results
