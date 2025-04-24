@@ -8,6 +8,7 @@ import collections
 import time
 
 import numpy as np
+from numpy.typing import NDArray
 
 from adaptive_filter.utils.math_utils import EigenDecomposition
 
@@ -16,19 +17,68 @@ class EvaluationSuite:
     def __init__(self, algorithm: str) -> None:
         self.algorithm = algorithm
 
-    def MSE(self, desired_signal: float, input_signal: float) -> np.float64:
+    def signal_reshaper(
+        self,
+        desired_signal: NDArray[np.float64],
+        input_signal: NDArray[np.float64],
+        clean_signal: NDArray[np.float64],
+        error_signal: NDArray[np.float64],
+    ) -> tuple:
+        """Flattens/ravels the signals and truncates them to the shortest signal for downstream metric evals.
+
+        Args:
+            desired_signal (NDArray[np.float64]): Observed or desired value
+            input_signal (NDArray[np.float64]): Prediction of value
+            clean_signal (NDArray[np.float64]): Clean signal
+            error_signal (NDArray[np.float64]):
+                Error output of filter prediction (d - y)
+
+        Returns:
+            tuple:
+                - NDArray[np.float64]: Shortened 1D desired signal
+                - NDArray[np.float64]: Shortened 1D input y_n signal
+                - NDArray[np.float64]: Shortened 1D clean signal
+                - NDArray[np.float64]: Shortened 1D error signal
+        """
+        # first raveling each input
+        d_flat = desired_signal.ravel()
+        y_flat = input_signal.ravel()
+        clean_flat = clean_signal.ravel()
+        error_flat = error_signal.ravel()
+
+        # finding the shortest signal
+        shortest = min(
+            len(d_flat),
+            len(y_flat),
+            len(clean_flat),
+            len(error_flat),
+        )
+
+        # trimming each signal to the shortest length
+        return (
+            d_flat[:shortest],
+            y_flat[:shortest],
+            clean_flat[:shortest],
+            error_flat[:shortest],
+        )
+
+    def MSE(
+        self, desired_signal: NDArray[np.float64], input_signal: NDArray[np.float64]
+    ) -> np.float64:
         """Calculates the Mean Squared Error = 1/n * sum(y - y_hat)**2
 
         Args:
-            desired_signal (float): Observed or desired value
-            input_signal (float): Prediction of value
+            desired_signal (NDArray[np.float64]): Observed or desired value
+            input_signal (NDArray[np.float64]): Prediction of value
 
         Returns:
             np.float64: Mean squared error
         """
         return np.mean((desired_signal - input_signal) ** 2)
 
-    def SNR(self, desired_signal: float, noisy_signal: float) -> Any:
+    def SNR(
+        self, desired_signal: NDArray[np.float64], noisy_signal: NDArray[np.float64]
+    ) -> Any:
         """Calculates the Signal to Noise Ratio in dB: SNR = (Power of Signal)/(Power of Noise).
 
         Args:
@@ -38,19 +88,16 @@ class EvaluationSuite:
         Returns:
             Any: SNR in dB
         """
-        # formula is: snr = 10log_10((s)^2 / (s - s_hat)^2)
-        "$$SNR = 10 log_{10}\\frac{s^{⊤}s}{(s − ˆs)^{⊤}(s − ˆs)}$$"
         # Need to account for when speech is silent...
-
         energy_thresh = 1e-6
-        signal_power = np.mean(desired_signal**2)
+        signal_power = np.sum(desired_signal**2)
         # returning zero if signal power is less than the energy thresh, meaning no speech
         if signal_power < energy_thresh:
             return 0
         # calculating the residual noise: clean - error output
-        noise_power = np.mean((desired_signal - noisy_signal) ** 2) + 1e-12
+        noise_power = np.sum((desired_signal - noisy_signal) ** 2) + 1e-12
         # Now we can return the SNR ratio in dB
-        snr = signal_power / (noise_power)
+        snr = signal_power / noise_power
         # print(f"Global SNR: {10 * np.log10(snr)}")
         return 10 * np.log10(snr + 1e-12)
 
