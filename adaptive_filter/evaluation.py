@@ -10,6 +10,7 @@ import soundfile as sf
 
 from adaptive_filter.algorithms import apa, frequency_domain, fx_lms, lms, nlms, rls
 from adaptive_filter.filter_models.filter_model import FilterModel
+from adaptive_filter.utils import realNoiseSimulator
 
 
 # function for loading the data for evaluation
@@ -42,7 +43,7 @@ def load_data(noise: str, snr_levels: int = 1) -> tuple:
     noise_wavs = []
     for file in noise_glob:
         noise_file, noise_sr = librosa.load(file, sr=None)
-        print(f"Noise file: {file}")
+        # print(f"Noise file: {file}")
         noise_wavs.append(noise_file)
         # print(noise_file.shape)
     # Turning into np array
@@ -52,7 +53,7 @@ def load_data(noise: str, snr_levels: int = 1) -> tuple:
     noisy_speech_wavs = []
     for file in noisy_speech_glob:
         noisy_speech_file, noisy_speech_sr = librosa.load(file, sr=None)
-        print(f"Noisy Speech file: {file}")
+        # print(f"Noisy Speech file: {file}")
         noisy_speech_wavs.append(noisy_speech_file)
     # Turning into np array
     noisy_speech_array = np.array(noisy_speech_wavs, dtype=object)
@@ -63,7 +64,7 @@ def load_data(noise: str, snr_levels: int = 1) -> tuple:
         # appending extra copies of the speech data depending on SNR level
         clean_speech_file, clean_speech_sr = librosa.load(file, sr=None)
         for j in range(snr_levels):
-            print(f"Clean Speech file: {file}")
+            # print(f"Clean Speech file: {file}")
             clean_speech_wavs.append(clean_speech_file)
     # Turning into np array
     clean_speech_array = np.array(clean_speech_wavs, dtype=object)
@@ -150,10 +151,16 @@ def noise_evaluation(
 
     # Run the filtering algorithm per instance of noise
     for i in range(noise_list.shape[0]):
+        # making the noise references more "real"
+        noise_list_mic = realNoiseSimulator.mic_white_noise(noise_list[i], snr_input=15)
+        # NOTE: FS needs to be not hardcoded.
+        real_noise_sample = realNoiseSimulator.reference_delay(
+            noise_list_mic, delay_amount=0.0, fs=16000
+        )
         error, noise_estimate, adapt_mse_i, speech_mse_i, snr_i, delta_snr_i, time_i = (
             af_filter.filter(
                 d=noisy_speech_list[i],
-                x=noise_list[i],
+                x=real_noise_sample,
                 clean_signal=clean_speech_list[i],
             )
         )
