@@ -1,2 +1,2 @@
-LMS Mean MSE: air_conditioner noise,LMS Mean SNR: air_conditioner noise
-0.0043071754494315535,-6.171596038428288
+LMS Adaption MSE: air_conditioner noise,LMS Speech MSE: air_conditioner noise,LMS Mean SNR: air_conditioner noise,LMS Mean Delta SNR: air_conditioner noise,LMS Mean Clock-time: air_conditioner noise
+0.004074704587658879,0.007213938998595829,-3.3688973379624914,0.0318953490250067,0.847736283426257
