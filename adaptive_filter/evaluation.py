@@ -4,7 +4,6 @@ import csv
 import glob
 import time
 
-import cowsay
 import librosa
 import numpy as np
 
@@ -269,12 +268,6 @@ def full_evaluation(
         # Stop the timer!
         total_elapsed_time = time.perf_counter() - start_time
         print(f"Evaluation procedure completed in {total_elapsed_time:.3f} seconds.")
-        print(
-            cowsay.get_output_string(
-                "cow",
-                "Evaluation procedure completed in {total_elapsed_time:.3f} seconds.",
-            )
-        )
         # print(f" FINAL RESULTS!!! \n{final_results}")
         return final_results
 
