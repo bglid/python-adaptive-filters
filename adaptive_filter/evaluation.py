@@ -6,13 +6,14 @@ import time
 
 import librosa
 import numpy as np
+import soundfile as sf
 
 from adaptive_filter.algorithms import apa, frequency_domain, fx_lms, lms, nlms, rls
 from adaptive_filter.filter_models.filter_model import FilterModel
 
 
 # function for loading the data for evaluation
-def load_data(noise: str, snr_levels: int = 5) -> tuple:
+def load_data(noise: str, snr_levels: int = 1) -> tuple:
     """Reads in data into three different lists for running evaluation.
 
     Args:
@@ -31,10 +32,17 @@ def load_data(noise: str, snr_levels: int = 5) -> tuple:
         "Noisy_Speech": f"./data/evaluation_data/{noise}/NoisySpeech_training/",
         "Clean_Speech": f"./data/evaluation_data/{noise}/CleanSpeech_training/",
     }
+
+    # Sorting the files from glob
+    noise_glob = sorted(glob.glob(f"{read_paths['Noise']}/*"))
+    noisy_speech_glob = sorted(glob.glob(f"{read_paths['Noisy_Speech']}/*"))
+    clean_glob = sorted(glob.glob(f"{read_paths['Clean_Speech']}/*"))
+
     # Loading all the noise files
     noise_wavs = []
-    for file in glob.iglob(f"{read_paths['Noise']}/*"):
+    for file in noise_glob:
         noise_file, noise_sr = librosa.load(file, sr=None)
+        print(f"Noise file: {file}")
         noise_wavs.append(noise_file)
         # print(noise_file.shape)
     # Turning into np array
@@ -42,18 +50,20 @@ def load_data(noise: str, snr_levels: int = 5) -> tuple:
 
     # Loading all the noisy_speech files
     noisy_speech_wavs = []
-    for file in glob.iglob(f"{read_paths['Noisy_Speech']}/*"):
+    for file in noisy_speech_glob:
         noisy_speech_file, noisy_speech_sr = librosa.load(file, sr=None)
+        print(f"Noisy Speech file: {file}")
         noisy_speech_wavs.append(noisy_speech_file)
     # Turning into np array
     noisy_speech_array = np.array(noisy_speech_wavs, dtype=object)
 
     # Loading all the clean_speech files
     clean_speech_wavs = []
-    for file in glob.iglob(f"{read_paths['Clean_Speech']}/*"):
+    for file in clean_glob:
         # appending extra copies of the speech data depending on SNR level
         clean_speech_file, clean_speech_sr = librosa.load(file, sr=None)
         for j in range(snr_levels):
+            print(f"Clean Speech file: {file}")
             clean_speech_wavs.append(clean_speech_file)
     # Turning into np array
     clean_speech_array = np.array(clean_speech_wavs, dtype=object)
@@ -94,7 +104,7 @@ def select_algorithm(
         # setting filter with given inputs
         filter = algos[algorithm]
         # NOTE: for checking the class
-        print(filter.__class__)
+        print(f"Algorithm {algorithm} params: {mu}\n{filter_order}")
 
     return filter
 
@@ -105,7 +115,7 @@ def noise_evaluation(
     mu: float,
     algorithm: str,
     noise: str,
-    snr_levels: int = 5,
+    snr_levels: int = 1,
     save_result: bool = False,
 ) -> dict[str, float]:
     """Iterates Adaptive filter algorithm over full dataset of noise, returning Average result. NOTE: Files must be presorted
@@ -147,6 +157,25 @@ def noise_evaluation(
                 clean_signal=clean_speech_list[i],
             )
         )
+
+        # writing the example to audio and saving:
+        if save_result is True:
+            sf.write(
+                f"./data/processed_data/{noise}/{algorithm}/clean{i}.wav",
+                clean_speech_list[i],
+                samplerate=16000,
+            )
+            sf.write(
+                f"./data/processed_data/{noise}/{algorithm}/noisy_speech{i}.wav",
+                noisy_speech_list[i],
+                samplerate=16000,
+            )
+            sf.write(
+                f"./data/processed_data/{noise}/{algorithm}/result{i}.wav",
+                error,
+                samplerate=16000,
+            )
+
         # appending mean mse and snr to later avg.
         all_adapt_mse[i] = adapt_mse_i
         all_speech_mse[i] = speech_mse_i
@@ -173,7 +202,7 @@ def full_evaluation(
     mu: float,
     algorithm: str,
     noise: str,
-    snr_levels: int = 5,
+    snr_levels: int = 1,
     save_result: bool = False,
 ) -> dict[str, dict[str, float]]:
     """Runs the evaluation aggregated evalutaion metrics for each noise type provided. Writes final results to a .csv.
@@ -240,7 +269,7 @@ def full_evaluation(
             print(fields[4])
             # writing each
             with open(
-                f"./data/tabular_results/{algorithm}/{valid_noise[i]}_results.csv",
+                f"./data/tabular_results/{valid_noise[i]}/{algorithm}_results.csv",
                 "w",
                 newline="",
             ) as csvfile:
@@ -279,5 +308,5 @@ def full_evaluation(
 
 if __name__ == "__main__":
 
-    full_evaluation(32, 0.01, "LMS", "all")
+    full_evaluation(32, 0.05, "LMS", "all", 1, True)
     # noise_evaluation(32, 0.01, "LMS", "air_conditioner")
