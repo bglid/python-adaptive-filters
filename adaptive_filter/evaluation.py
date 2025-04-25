@@ -152,10 +152,10 @@ def noise_evaluation(
     # Run the filtering algorithm per instance of noise
     for i in range(noise_list.shape[0]):
         # making the noise references more "real"
-        noise_list_mic = realNoiseSimulator.mic_white_noise(noise_list[i], snr_input=15)
+        noise_list_mic = realNoiseSimulator.mic_white_noise(noise_list[i], snr_input=30)
         # NOTE: FS needs to be not hardcoded.
         real_noise_sample = realNoiseSimulator.reference_delay(
-            noise_list_mic, delay_amount=0.0, fs=16000
+            noise_list_mic, delay_amount=0.2, fs=16000
         )
         error, noise_estimate, adapt_mse_i, speech_mse_i, snr_i, delta_snr_i, time_i = (
             af_filter.filter(
