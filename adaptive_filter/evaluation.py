@@ -105,7 +105,10 @@ def select_algorithm(
         # setting filter with given inputs
         filter = algos[algorithm]
         # NOTE: for checking the class
-        print(f"Algorithm {algorithm} params: {mu}\n{filter_order}")
+        print(f"Algorithm:\t{algorithm} \n---------------------")
+        print(
+            f"params: \nmu = {mu}\nfilter-order = {filter_order}\n---------------------"
+        )
 
     return filter
 
@@ -116,6 +119,9 @@ def noise_evaluation(
     mu: float,
     algorithm: str,
     noise: str,
+    delay_amount: float,
+    random_noise_amount: int,
+    fs: int = 16000,
     snr_levels: int = 1,
     save_result: bool = False,
 ) -> dict[str, float]:
@@ -127,6 +133,9 @@ def noise_evaluation(
         algorithm (str): Adaptive Filter Algorithm to be used.
         noise (str):
             Which noise type with be evaluated. Points to directories containing all related data.
+        delay_amount (float): Amount in ms to delay noise reference.
+        random_noise_amount (int): Power of random noise to add to reference.
+        fs (int): Sample rate.
         snr_levels (int): How many differing SNR levels are tested. Default is 5.
         save_result (bool):
             Whether or not individual .wav files and plots should be written or saved. Default is False.
@@ -152,10 +161,12 @@ def noise_evaluation(
     # Run the filtering algorithm per instance of noise
     for i in range(noise_list.shape[0]):
         # making the noise references more "real"
-        noise_list_mic = realNoiseSimulator.mic_white_noise(noise_list[i], snr_input=30)
+        noise_list_mic = realNoiseSimulator.mic_white_noise(
+            noise_list[i], snr_input=random_noise_amount
+        )
         # NOTE: FS needs to be not hardcoded.
         real_noise_sample = realNoiseSimulator.reference_delay(
-            noise_list_mic, delay_amount=0.2, fs=16000
+            noise_list_mic, delay_amount=delay_amount, fs=fs
         )
         error, noise_estimate, adapt_mse_i, speech_mse_i, snr_i, delta_snr_i, time_i = (
             af_filter.filter(
@@ -170,26 +181,26 @@ def noise_evaluation(
             sf.write(
                 f"./data/processed_data/{noise}/{algorithm}/clean{i}.wav",
                 clean_speech_list[i],
-                samplerate=16000,
+                samplerate=fs,
             )
             sf.write(
                 f"./data/processed_data/{noise}/{algorithm}/noisy_speech{i}.wav",
                 noisy_speech_list[i],
-                samplerate=16000,
+                samplerate=fs,
             )
             sf.write(
                 f"./data/processed_data/{noise}/{algorithm}/result{i}.wav",
                 error,
-                samplerate=16000,
+                samplerate=fs,
             )
 
         # appending mean mse and snr to later avg.
         all_adapt_mse[i] = adapt_mse_i
         all_speech_mse[i] = speech_mse_i
         all_snr[i] = snr_i
-        print(f"\nSNR global: {snr_i}\n")
+        # print(f"\nSNR global: {snr_i}\n")
         all_delta_snr[i] = delta_snr_i
-        print(f"SNR Delta: {delta_snr_i}\n")
+        # print(f"SNR Delta: {delta_snr_i}\n")
         all_time[i] = time_i
 
     # taking the mean of the metrics for this noise
@@ -198,8 +209,6 @@ def noise_evaluation(
     mean_results[f"{algorithm} Mean SNR: {noise} noise"] = np.mean(all_snr)
     mean_results[f"{algorithm} Mean Delta SNR: {noise} noise"] = np.mean(all_delta_snr)
     mean_results[f"{algorithm} Mean Clock-time: {noise} noise"] = np.mean(all_time)
-    print("Checking mean results")
-    print(mean_results)
 
     return mean_results
 
@@ -209,6 +218,9 @@ def full_evaluation(
     mu: float,
     algorithm: str,
     noise: str,
+    delay_amount: float,
+    random_noise_amount: int,
+    fs: int = 16000,
     snr_levels: int = 1,
     save_result: bool = False,
 ) -> dict[str, dict[str, float]]:
@@ -220,6 +232,9 @@ def full_evaluation(
         algorithm (str): Adaptive Filter Algorithm to be used.
         noise (str):
             String of noise type to run evaluation metrics on. If all, runs every metric
+        delay_amount (float): Amount in ms to delay noise reference.
+        random_noise_amount (int): Power of random noise to add to reference.
+        fs (int): Sample rate.
         snr_levels (int): How many differing SNR levels are tested. Default is 5.
         save_result (bool):
             Whether or not individual .wav files and plots should be written or saved. Default is False.
@@ -250,12 +265,15 @@ def full_evaluation(
             )
             # passing valid noise, which is the noise at this iter
             result = noise_evaluation(
-                filter_order,
-                mu,
-                algorithm,
-                valid_noise[i],
-                snr_levels,
-                save_result,
+                filter_order=filter_order,
+                mu=mu,
+                algorithm=algorithm,
+                noise=valid_noise[i],
+                delay_amount=delay_amount,
+                random_noise_amount=random_noise_amount,
+                fs=fs,
+                snr_levels=snr_levels,
+                save_result=save_result,
             )
 
             final_results[f"{algorithm} All {valid_noise[i]} results "] = result
@@ -315,5 +333,5 @@ def full_evaluation(
 
 if __name__ == "__main__":
 
-    full_evaluation(32, 0.05, "LMS", "all", 1, True)
+    full_evaluation(32, 0.04, "LMS", "all", 0.2, 30, 1, True)
     # noise_evaluation(32, 0.01, "LMS", "air_conditioner")
