@@ -95,6 +95,7 @@ def select_algorithm(
     # setting filter algorithm via dict
     algos: dict[str, FilterModel] = {
         "LMS": lms.LMS(mu=mu, n=filter_order),
+        "NLMS": nlms.NLMS(mu=mu, n=filter_order),
     }
     # filter algorithm is defined by input
     # checking first that input isn't faulty
@@ -333,5 +334,5 @@ def full_evaluation(
 
 if __name__ == "__main__":
 
-    full_evaluation(16, 0.04, "LMS", "all", 0.2, 30, 1, True)
-    # noise_evaluation(32, 0.01, "LMS", "air_conditioner")
+    # full_evaluation(16, 0.04, "LMS", "all", 0.2, 30, 1, True)
+    full_evaluation(4, 0.01, "NLMS", "all", 1.0, 40, 1, True)

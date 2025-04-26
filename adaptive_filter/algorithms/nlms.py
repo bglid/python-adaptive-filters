@@ -9,7 +9,7 @@ class NLMS(FilterModel):
         self.mu = mu
         self.N = n
         self.algorithm = "NLMS"
-        self.eps = 1e-8
+        self.eps = 1e-6
         self.p = 0.0
 
     # updating the update step for LMS algorithm
@@ -20,7 +20,7 @@ class NLMS(FilterModel):
             x_n (NDArray[np.float64]): vector[n] of array X, the noise estimate
 
         Returns:
-            np.float64: The normalized step used in update step function.
+            NDArray[np.float64]: The weight update vector for NLMS.
         """
-        normalized_step = self.eps + np.linalg.norm(x_n) ** 2
-        return (self.mu / normalized_step) * e_n * x_n
+        self.p = self.eps + np.linalg.norm(x_n) ** 2
+        return (self.mu / self.p) * e_n * x_n

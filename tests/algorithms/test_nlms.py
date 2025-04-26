@@ -10,7 +10,7 @@ from adaptive_filter.filter_models.filter_model import FilterModel
     "mu,e_n,x_n, expected_result",
     [
         (0.5, 2.0, np.array([1.0, -1.0]), np.array([0.5, -0.5])),
-        (1.0, 1.0, np.array([5.0, 2.0]), np.array([0.172414, 0.068966])),
+        (1.0, 1.0, np.array([5.0, 2.0]), np.array([0.17241375, 0.0689655])),
         (-1.0, 1.0, np.array([0.5, 0.25]), np.array([-1.6, -0.8])),
     ],
 )
