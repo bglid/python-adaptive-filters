@@ -2,6 +2,7 @@
 from typing import Any
 
 import time
+from collections import deque
 
 import numpy as np
 from numpy.typing import NDArray
@@ -85,7 +86,6 @@ class FilterModel:
         # initializing our weights given X
         self.W = np.random.normal(0.0, 0.5, self.N)
         self.W *= 0.001  # setting weights close to zero
-        # assert self.W.ndim == 1
 
         # turning D and X into np arrays, if not already
         d = np.asarray(d).ravel()
@@ -124,6 +124,9 @@ class FilterModel:
 
         # creating a ciruclar buffer for the filter taps
         circ_buffer = np.zeros(self.N, dtype=float)
+        # for APA
+        x_buffer = deque(maxlen=self.N)
+        error_buffer = deque(maxlen=self.N)
 
         # clock-time for how long filtering this signal takes
         start_time = time.perf_counter()
@@ -139,9 +142,19 @@ class FilterModel:
             error[sample] = self.error(
                 d_n=d[sample], noise_estimate=noise_estimate[sample]
             )
-            # updating the weights
-            self.W += self.update_step(e_n=error[sample], x_n=circ_buffer)
-            mse_history[sample] = error[sample] ** 2
+            # to comply with APA
+            x_buffer.append(circ_buffer.copy())
+            error_buffer.append(error[sample])
+
+            if self.algorithm != "APA":
+                # updating the weights
+                self.W += self.update_step(e_n=error[sample], x_n=circ_buffer)
+                mse_history[sample] = error[sample] ** 2
+            # APA update
+            elif len(x_buffer) == self.N and self.algorithm == "APA":
+                apa_x = np.stack(x_buffer, axis=1)
+                apa_e = np.array(error_buffer)
+                self.W += self.update_step(e_n=apa_e, x_n=apa_x)
 
         # taking clock-time before running metrics
         elapsed_time = time.perf_counter() - start_time
@@ -151,7 +164,7 @@ class FilterModel:
             d, noise_estimate, clean_signal, error
         )
 
-        # What LMS minimized
+        # What algo minimized
         adaption_mse_result = evaluation_runner.MSE(d_flat, y_flat)
         # How close e[n] is to s[n]
         speech_mse_result = evaluation_runner.MSE(clean_flat, error_flat)
