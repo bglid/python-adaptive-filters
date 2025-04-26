@@ -13,13 +13,13 @@
 ![Coverage Report](assets/images/coverage.svg)
 
 
-*NOTE Project is still in progress, currently only LMS filter is working.* 
+*NOTE Project is still in progress, currently only LMS, NLMS, and RLS filters are implemented.* 
 
 </div>
 
 ## LMS, RLS, NLMS, FX_LMS, APA, and Frequency Domain Adaptive filters for Adaptive Noise Cancelling.
 
-* ###### Python prototype used as a proof of concept to benchmark performance of different filter algorithms on noisy speech. Part of a larger project to implement embedded adaptive filters using C++.**
+* ###### Python prototype used as a proof of concept to benchmark performance of different filter algorithms on noisy speech. Part of a project to implement embedded adaptive filters using C++.
 
  - - -
 ## 🛡 License
