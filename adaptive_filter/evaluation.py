@@ -96,6 +96,7 @@ def select_algorithm(
     algos: dict[str, FilterModel] = {
         "LMS": lms.LMS(mu=mu, n=filter_order),
         "NLMS": nlms.NLMS(mu=mu, n=filter_order),
+        "RLS": rls.RLS(mu=mu, n=filter_order),
     }
     # filter algorithm is defined by input
     # checking first that input isn't faulty
@@ -165,7 +166,6 @@ def noise_evaluation(
         noise_list_mic = realNoiseSimulator.mic_white_noise(
             noise_list[i], snr_input=random_noise_amount
         )
-        # NOTE: FS needs to be not hardcoded.
         real_noise_sample = realNoiseSimulator.reference_delay(
             noise_list_mic, delay_amount=delay_amount, fs=fs
         )
@@ -201,7 +201,7 @@ def noise_evaluation(
         all_snr[i] = snr_i
         # print(f"\nSNR global: {snr_i}\n")
         all_delta_snr[i] = delta_snr_i
-        # print(f"SNR Delta: {delta_snr_i}\n")
+        print(f"SNR Delta: {delta_snr_i}\n")
         all_time[i] = time_i
 
     # taking the mean of the metrics for this noise
@@ -334,5 +334,6 @@ def full_evaluation(
 
 if __name__ == "__main__":
 
-    # full_evaluation(16, 0.04, "LMS", "all", 0.2, 30, 1, True)
-    full_evaluation(4, 0.01, "NLMS", "all", 1.0, 40, 1, True)
+    # full_evaluation(16, 0.01, "LMS", "all", 10.0, 30, 1, True)
+    # full_evaluation(8, 0.001, "NLMS", "all", 10.0, 30, 1, True)
+    full_evaluation(32, 0.999, "RLS", "all", 30.0, 30, 1, True)

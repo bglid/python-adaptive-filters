@@ -2,7 +2,6 @@ import numpy as np
 import pytest
 
 from adaptive_filter.algorithms import lms
-from adaptive_filter.filter_models.filter_model import FilterModel
 
 
 # creating an expected output to test output
