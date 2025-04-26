@@ -124,48 +124,6 @@ class EvaluationSuite:
         max_lambda = np.min(eigenvalues)
         return np.abs(1 - 2 * step_size * max_lambda) ** k
 
-    # function to run full evaulation/benchmark suite
-    def evaluation(
-        self,
-        desired_signal,
-        input_signal,
-        step_size,
-        time_k,
-        error_output=None,
-        clean_signal=None,
-    ):
-        """Calculates and returns suite of evaluation metrics
-
-        Args:
-            desired_signal (float): Input Signal
-            input_signal (float): Input Noise
-            step_size (float): Step size Mu
-            time_k (int): the point in time in samples
-            error_output (float): Error output of d - y, ideally cleaner signal
-            clean_signal (float): Clean Signal
-
-        Returns:
-            dict: Dictionary of evaluation results
-        """
-
-        eval_results: dict[str, list[Any]] = {
-            "MSE": [],
-            "SNR": [],
-        }
-
-        eval_results["MSE"].append(self.MSE(desired_signal, input_signal))
-        # LMS eval
-        if self.algorithm == "LMS":
-            # For SNR, desired signal is actually the clean signal and noisy signal is the error output
-            eval_results["SNR"].append(
-                self.SNR(desired_signal=clean_signal, noisy_signal=error_output)
-            )
-            # eval_results["Convergence"] = self.lms_convergence_rate(
-            #     step_size, input_signal, k=time_k
-            # )
-
-        return eval_results
-
 
 if __name__ == "__main__":
 

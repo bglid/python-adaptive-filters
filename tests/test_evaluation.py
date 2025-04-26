@@ -1,7 +1,7 @@
 import pytest
 
 from adaptive_filter.algorithms import apa, frequency_domain, fx_lms, lms, nlms, rls
-from adaptive_filter.evaluation import load_data, select_algorithm
+from adaptive_filter.evaluation import load_data, noise_evaluation, select_algorithm
 from adaptive_filter.filter_models.filter_model import FilterModel
 
 
@@ -58,3 +58,38 @@ def test_select_algorithm(filter_order, mu, algorithm, expected):
         assert result.__class__ == expected.__class__
         assert result.mu == expected.mu
         assert result.N == expected.N
+
+
+@pytest.mark.parametrize(
+    "filter_order, mu, algorithm, noise, delay_amount, random_noise_amount, fs, snr_levels, save_result, expected",
+    [
+        pytest.param(
+            16, 0.1, "LMS", "babble", 5.0, 30, 16000, 1, False, dict[str, float]
+        ),
+    ],
+)
+def test_noise_evaluation(
+    filter_order,
+    mu,
+    algorithm,
+    noise,
+    delay_amount,
+    random_noise_amount,
+    fs,
+    snr_levels,
+    save_result,
+    expected,
+):
+    result = noise_evaluation(
+        filter_order,
+        mu,
+        algorithm,
+        noise,
+        delay_amount,
+        random_noise_amount,
+        fs,
+        snr_levels,
+        save_result,
+    )
+
+    assert isinstance(result, dict)

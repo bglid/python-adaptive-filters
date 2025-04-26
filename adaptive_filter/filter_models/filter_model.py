@@ -77,25 +77,34 @@ class FilterModel:
                 - float: Global SNR across the signal.
                 - float: Delta SNR improvement
                 - float: Clock-time of filter performance
+
+        Raises:
+            ValueError: If Signal dims are not compatible (1D)
         """
 
         # initializing our weights given X
         self.W = np.random.normal(0.0, 0.5, self.N)
         self.W *= 0.001  # setting weights close to zero
-        assert self.W.ndim == 1
+        # assert self.W.ndim == 1
 
         # turning D and X into np arrays, if not already
         d = np.asarray(d).ravel()
-        assert d.ndim == 1
+        if d.ndim != 1:
+            raise ValueError(f"Expected desired signal to be 1D, got shape: {d.shape}")
 
         x = np.asarray(x).ravel()
-        assert x.ndim == 1
+        if x.ndim != 1:
+            raise ValueError(f"Expected input signal to be 1D, got shape: {x.shape}")
 
         clean_signal = np.asarray(clean_signal).ravel()
-        assert clean_signal.ndim == 1
+        if clean_signal.ndim != 1:
+            raise ValueError(
+                f"Expected clean signal to be 1D, got shape: {clean_signal.shape}"
+            )
 
         if d.shape[0] < x.shape[0]:
             x = x[: d.shape[0]]
+            # assert x.shape == d.shape  # Double check
         if clean_signal.shape[0] < d.shape[0]:
             d = d[: clean_signal.shape[0]]
             x = x[: clean_signal.shape[0]]
