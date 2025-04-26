@@ -119,8 +119,8 @@ class FilterModel:
         noise_estimate = np.zeros(num_samples)
         error = np.zeros(num_samples)
 
-        # creating an array to track the weight changes over time N
-        # self.weight_t = np.zeros(())
+        # creating an array to track MSE history for convergence metrics
+        mse_history = np.zeros(num_samples)
 
         # clock-time for how long filtering this signal takes
         start_time = time.perf_counter()
@@ -133,6 +133,7 @@ class FilterModel:
             )
             # updating the weights
             self.W += self.update_step(e_n=error[sample], x_n=x[sample])
+            mse_history[sample] = error[sample] ** 2
 
         # taking clock-time before running metrics
         elapsed_time = time.perf_counter() - start_time
@@ -152,6 +153,7 @@ class FilterModel:
         snr_in = evaluation_runner.SNR(clean_flat, d_flat)  # SNR without filtering
         delta_snr = snr_result - snr_in
 
+        # NOTE: need to return MSE history...
         return (
             error,
             noise_estimate,

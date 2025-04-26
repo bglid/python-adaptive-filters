@@ -333,5 +333,5 @@ def full_evaluation(
 
 if __name__ == "__main__":
 
-    full_evaluation(32, 0.04, "LMS", "all", 0.2, 30, 1, True)
+    full_evaluation(16, 0.04, "LMS", "all", 0.2, 30, 1, True)
     # noise_evaluation(32, 0.01, "LMS", "air_conditioner")
