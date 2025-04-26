@@ -80,29 +80,20 @@ class FilterModel:
         """
 
         # initializing our weights given X
-        self.W = np.random.normal(0.0, 0.5, x[0].shape)
+        self.W = np.random.normal(0.0, 0.5, self.N)
         self.W *= 0.001  # setting weights close to zero
-        if self.W.ndim <= 1:
-            self.W = self.W.reshape(-1, 1)
-            # print(self.W.shape)
-        assert self.W.ndim == 2
+        assert self.W.ndim == 1
 
         # turning D and X into np arrays, if not already
-        if type(d) is not np.ndarray:
-            d = np.array(d)
-        # asserting the shape of d
-        if d.ndim == 1:
-            d = d.reshape(-1, 1)  # making shape (n, 1)
-        assert d.ndim == 2
+        d = np.asarray(d).ravel()
+        assert d.ndim == 1
 
-        if type(x) is not np.ndarray:
-            x = np.array(x)
-        # checking X shape
-        if x.ndim == 1:
-            x = x.reshape(-1, 1)  # making shape (n, 1)
-        assert x.ndim == 2
+        x = np.asarray(x).ravel()
+        assert x.ndim == 1
 
-        # need to truncate noise estimate if it's longer than the desired singal
+        clean_signal = np.asarray(clean_signal).ravel()
+        assert clean_signal.ndim == 1
+
         if d.shape[0] < x.shape[0]:
             x = x[: d.shape[0]]
         if clean_signal.shape[0] < d.shape[0]:
@@ -122,17 +113,25 @@ class FilterModel:
         # creating an array to track MSE history for convergence metrics
         mse_history = np.zeros(num_samples)
 
+        # creating a ciruclar buffer for the filter taps
+        circ_buffer = np.zeros(self.N, dtype=float)
+
         # clock-time for how long filtering this signal takes
         start_time = time.perf_counter()
         for sample in range(num_samples):
+            # using a circular buffer style window technique:
+            circ_buffer = np.roll(circ_buffer, 1)
+            # writer-pointer to add the most recent sample into the N buffer window
+            circ_buffer[0] = x[sample]
+
             # getting the prediction y (noise estimate)
-            noise_estimate[sample] = self.noise_estimate(x[sample])
+            noise_estimate[sample] = self.noise_estimate(circ_buffer)
             # getting the error e[sample] = d[sample] - y[sample]
             error[sample] = self.error(
                 d_n=d[sample], noise_estimate=noise_estimate[sample]
             )
             # updating the weights
-            self.W += self.update_step(e_n=error[sample], x_n=x[sample])
+            self.W += self.update_step(e_n=error[sample], x_n=circ_buffer)
             mse_history[sample] = error[sample] ** 2
 
         # taking clock-time before running metrics
