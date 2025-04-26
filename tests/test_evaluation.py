@@ -18,6 +18,9 @@ def test_load_data():
     "mu, filter_order, algorithm, expected",
     [
         pytest.param(0.01, 16, "LMS", lms.LMS(mu=0.01, n=16), id="Valid_LMS"),
+        pytest.param(0.001, 8, "NLMS", nlms.NLMS(mu=0.001, n=8), id="Valid_NLMS"),
+        pytest.param(0.99, 32, "RLS", rls.RLS(mu=0.99, n=32), id="Valid_RLS"),
+        pytest.param(0.01, 16, "APA", apa.APA(mu=0.01, n=16), id="Valid_APA"),
         # test when algorithm is mispelt
         pytest.param(
             0.01,

@@ -97,6 +97,7 @@ def select_algorithm(
         "LMS": lms.LMS(mu=mu, n=filter_order),
         "NLMS": nlms.NLMS(mu=mu, n=filter_order),
         "RLS": rls.RLS(mu=mu, n=filter_order),
+        "APA": apa.APA(mu=mu, n=filter_order),
     }
     # filter algorithm is defined by input
     # checking first that input isn't faulty
@@ -106,7 +107,6 @@ def select_algorithm(
     if algorithm is not None:
         # setting filter with given inputs
         filter = algos[algorithm]
-        # NOTE: for checking the class
         print(f"Algorithm:\t{algorithm} \n---------------------")
         print(
             f"params: \nmu = {mu}\nfilter-order = {filter_order}\n---------------------"
@@ -336,4 +336,5 @@ if __name__ == "__main__":
 
     # full_evaluation(16, 0.01, "LMS", "all", 10.0, 30, 1, True)
     # full_evaluation(8, 0.001, "NLMS", "all", 10.0, 30, 1, True)
-    full_evaluation(32, 0.999, "RLS", "all", 30.0, 30, 1, True)
+    # full_evaluation(32, 0.999, "RLS", "all", 30.0, 30, 1, True)
+    full_evaluation(8, 0.001, "APA", "all", 0.0, 30, 1, True)
