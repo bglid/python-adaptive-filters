@@ -17,6 +17,7 @@ class NLMS(FilterModel):
         """Update for NLMS: Calc. the normalizing step, key to NLMS algorithm. p(n) = eps + ||X(n)||**2
 
         Args:
+            e_n (float): Error sample (n)
             x_n (NDArray[np.float64]): vector[n] of array X, the noise estimate
 
         Returns:
