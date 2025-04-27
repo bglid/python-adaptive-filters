@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Union
 
 import csv
 import glob
@@ -8,7 +8,8 @@ import librosa
 import numpy as np
 import soundfile as sf
 
-from adaptive_filter.algorithms import apa, frequency_domain, lms, nlms, rls
+from adaptive_filter.algorithms import apa, fd_lms, fd_nlms, lms, nlms, rls
+from adaptive_filter.filter_models.block_filter_model import BlockFilterModel
 from adaptive_filter.filter_models.filter_model import FilterModel
 from adaptive_filter.utils import realNoiseSimulator
 
@@ -78,13 +79,15 @@ def select_algorithm(
     filter_order: int,
     mu: float,
     algorithm: str,
-) -> FilterModel:
+    block_size: int,
+) -> Union[FilterModel, BlockFilterModel]:
     """Selects and returns instance of FilterModel based on algorithm passed
 
     Args:
         filter_order (int): The n-value of the filter window size.
         mu (float): Learning rate parameter (Mu).
         algorithm (str): Adaptive Filter Algorithm to be used.
+        block_size (int): Block size for BlockFilterModel classes.
 
     Returns:
         FilterModel: Instance of filter based on Algorithm
@@ -97,22 +100,36 @@ def select_algorithm(
         "LMS": lms.LMS(mu=mu, n=filter_order),
         "NLMS": nlms.NLMS(mu=mu, n=filter_order),
         "RLS": rls.RLS(mu=mu, n=filter_order),
-        "APA": apa.APA(mu=mu, n=filter_order),
+    }
+    # Block Algos
+    block_algos: dict[str, BlockFilterModel] = {
+        "APA": apa.APA(mu=mu, n=filter_order, block_size=block_size),
+        "FD_LMS": fd_lms.FD_LMS(mu=mu, n=filter_order),
+        "FD_NLMS": fd_nlms.FD_NLMS(mu=mu, n=filter_order),
     }
     # filter algorithm is defined by input
     # checking first that input isn't faulty
-    if algorithm not in algos:
+    if algorithm not in algos and algorithm not in block_algos:
         raise ValueError(f"Uknown algorithm: '{algorithm}'... ")
 
-    if algorithm is not None:
+    if algorithm is not None and algorithm in algos:
         # setting filter with given inputs
-        filter = algos[algorithm]
+        af_filter = algos[algorithm]
         print(f"Algorithm:\t{algorithm} \n---------------------")
         print(
             f"params: \nmu = {mu}\nfilter-order = {filter_order}\n---------------------"
         )
 
-    return filter
+    # checking block algos
+    if algorithm is not None and algorithm in block_algos:
+        # setting filter with given inputs
+        af_filter = block_algos[algorithm]
+        print(f"Block-based Algorithm:\t{algorithm} \n---------------------")
+        print(
+            f"params: \nmu = {mu}\nfilter-order = {filter_order}\nBlock-size = {af_filter.block_size}\n---------------------"
+        )
+
+    return af_filter
 
 
 # for demonstrating the results of a given algorithm
@@ -124,6 +141,7 @@ def noise_evaluation(
     delay_amount: float,
     random_noise_amount: int,
     fs: int = 16000,
+    block_size: int = 0,
     snr_levels: int = 1,
     save_result: bool = False,
 ) -> dict[str, float]:
@@ -138,6 +156,7 @@ def noise_evaluation(
         delay_amount (float): Amount in ms to delay noise reference.
         random_noise_amount (int): Power of random noise to add to reference.
         fs (int): Sample rate.
+        block_size (int): Block size for BlockFilterModel classes.
         snr_levels (int): How many differing SNR levels are tested. Default is 5.
         save_result (bool):
             Whether or not individual .wav files and plots should be written or saved. Default is False.
@@ -151,7 +170,7 @@ def noise_evaluation(
     noise_list, noisy_speech_list, clean_speech_list = load_data(noise)
 
     # getting filter algorithm
-    af_filter = select_algorithm(filter_order, mu, algorithm)
+    af_filter = select_algorithm(filter_order, mu, algorithm, block_size)
 
     # Allocating arrays for mse and snr results to average
     all_adapt_mse = np.zeros(shape=noise_list.shape[0])
@@ -222,6 +241,7 @@ def full_evaluation(
     delay_amount: float,
     random_noise_amount: int,
     fs: int = 16000,
+    block_size: int = 0,
     snr_levels: int = 1,
     save_result: bool = False,
 ) -> dict[str, dict[str, float]]:
@@ -236,6 +256,7 @@ def full_evaluation(
         delay_amount (float): Amount in ms to delay noise reference.
         random_noise_amount (int): Power of random noise to add to reference.
         fs (int): Sample rate.
+        block_size (int): Block size for BlockFilterModel classes.
         snr_levels (int): How many differing SNR levels are tested. Default is 5.
         save_result (bool):
             Whether or not individual .wav files and plots should be written or saved. Default is False.
@@ -273,6 +294,7 @@ def full_evaluation(
                 delay_amount=delay_amount,
                 random_noise_amount=random_noise_amount,
                 fs=fs,
+                block_size=block_size,
                 snr_levels=snr_levels,
                 save_result=save_result,
             )
@@ -334,7 +356,51 @@ def full_evaluation(
 
 if __name__ == "__main__":
 
-    # full_evaluation(16, 0.01, "LMS", "all", 10.0, 30, 1, True)
-    # full_evaluation(8, 0.001, "NLMS", "all", 10.0, 30, 1, True)
-    # full_evaluation(32, 0.999, "RLS", "all", 30.0, 30, 1, True)
-    full_evaluation(8, 0.001, "APA", "all", 0.0, 30, 1, True)
+    # full_evaluation(
+    #     filter_order=16,
+    #     mu=0.01,
+    #     algorithm="LMS",
+    #     noise="all",
+    #     delay_amount=10.0,
+    #     random_noise_amount=30,
+    #     fs=16000,
+    #     block_size=0,
+    #     snr_levels=1,
+    #     save_result=True,
+    # )
+    # full_evaluation(
+    #     filter_order=8,
+    #     mu=0.001,
+    #     algorithm="NLMS",
+    #     noise="all",
+    #     delay_amount=10.0,
+    #     random_noise_amount=30,
+    #     fs=16000,
+    #     block_size=0,
+    #     snr_levels=1,
+    #     save_result=True,
+    # )
+    # full_evaluation(
+    #     filter_order=32,
+    #     mu=0.999,
+    #     algorithm="RMS",
+    #     noise="all",
+    #     delay_amount=30.0,
+    #     random_noise_amount=30,
+    #     fs=16000,
+    #     block_size=0,
+    #     snr_levels=1,
+    #     save_result=True,
+    # )
+    full_evaluation(
+        filter_order=32,
+        mu=0.001,
+        algorithm="APA",
+        noise="all",
+        delay_amount=10.0,
+        random_noise_amount=30,
+        fs=16000,
+        block_size=8,
+        snr_levels=1,
+        save_result=True,
+    )

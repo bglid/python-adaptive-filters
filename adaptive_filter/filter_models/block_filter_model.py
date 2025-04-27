@@ -2,6 +2,7 @@
 from typing import Any
 
 import time
+from collections import deque
 
 import numpy as np
 from numpy.typing import NDArray
@@ -9,13 +10,21 @@ from numpy.typing import NDArray
 from adaptive_filter.utils.metrics import EvaluationSuite
 
 
-class FilterModel:
-    def __init__(self, mu: float, filter_order: int) -> None:
-        # consider adding p: order
-        self.mu = mu  # step_rate
-        self.N = filter_order  # filter window size
+# SIMILAR to FilterModel, but with block-based processing logic added
+class BlockFilterModel:
+    def __init__(
+        self, mu: float, filter_order: int, block_size: int, eps: float = 1e-6
+    ) -> None:
+        self.mu = mu
+        self.N = filter_order
+        # FFT length or P order for APA
+        self.block_size = block_size
+        self.half_bins = self.block_size // 2 + 1
+        self.eps = eps
         # Algorithm type, defined by subclass algorithm
         self.algorithm = ""
+        # # initializing weights
+        # self.W = np.zeros(self.half_bins, dtype=np.complex128)
 
     def noise_estimate(self, x_n: NDArray[np.float64]) -> np.float64:
         """Predicts the noise estimate, given vector X[n], noise reference. Uses formula W^T[n]X[n]
@@ -40,7 +49,11 @@ class FilterModel:
         """
         return d_n - noise_estimate
 
-    def update_step(self, e_n: float, x_n: NDArray[np.float64]) -> NDArray[np.float64]:
+    def update_step(
+        self,
+        e_n: float,
+        x_n: NDArray[np.float64],
+    ) -> NDArray[np.float64]:
         """Updates weights of W[n + 1], given the learning algorithm chosen
 
         Args:
@@ -81,7 +94,6 @@ class FilterModel:
         Raises:
             ValueError: If Signal dims are not compatible (1D)
         """
-
         # initializing our weights given X
         self.W = np.random.normal(0.0, 0.5, self.N)
         self.W *= 0.001  # setting weights close to zero
@@ -123,8 +135,12 @@ class FilterModel:
 
         # creating a ciruclar buffer for the filter taps
         circ_buffer = np.zeros(self.N, dtype=float)
+        # for buffering blocks
+        x_buffer = deque(maxlen=self.block_size)
+        error_buffer = deque(maxlen=self.block_size)
 
         # clock-time for how long filtering this signal takes
+        test_count = 0
         start_time = time.perf_counter()
         for sample in range(num_samples):
             # using a circular buffer style window technique:
@@ -138,10 +154,24 @@ class FilterModel:
             error[sample] = self.error(
                 d_n=d[sample], noise_estimate=noise_estimate[sample]
             )
+            # Buffering blocks
+            x_buffer.append(circ_buffer.copy())
+            error_buffer.append(error[sample])
+            test_count += 1
+            print(f"Buffer amount...{test_count}")
 
-            # updating the weights
-            self.W += self.update_step(e_n=error[sample], x_n=circ_buffer)
-            mse_history[sample] = error[sample] ** 2
+            # APA update
+            if len(x_buffer) == self.block_size and self.algorithm == "APA":
+                print(f"UPDATE at block size: {self.block_size}")
+                apa_x = np.stack(x_buffer, axis=1)
+                apa_e = np.array(error_buffer)
+                self.W += self.update_step(e_n=apa_e, x_n=apa_x)
+            # FDAF update
+            if len(x_buffer) == self.block_size and self.algorithm == (
+                "FD_LMS" or "FD_NLMS"
+            ):
+                x_freq = np.stack(x_buffer, axis=1)
+                e_freq = np.array(x_buffer)
 
         # taking clock-time before running metrics
         elapsed_time = time.perf_counter() - start_time
