@@ -1,10 +1,12 @@
+from typing import Any
+
 import numpy as np
 from numpy.typing import NDArray
 
 from adaptive_filter.filter_models.block_filter_model import BlockFilterModel
 
 
-class FD_LMS(BlockFilterModel):
+class FDLMS(BlockFilterModel):
     def __init__(self, mu: float, n: int, block_size: int) -> None:
         # initializing BlockFilterModel
         super().__init__(mu=mu, filter_order=n, block_size=block_size)
@@ -12,14 +14,16 @@ class FD_LMS(BlockFilterModel):
         self.eps = 1e-6
 
     # updating the update step for LMS algorithm
-    def update_step(self, e_n: float, x_n: NDArray[np.float64]) -> NDArray[np.float64]:
-        """Update for FDAF:
+    def update_step(
+        self, e_f: NDArray[np.complex128], x_f: NDArray[np.complex128]
+    ) -> NDArray[Any]:
+        """Update for FDAF: FD LMS algorithm.
 
         Args:
-            e_n (float): Error sample (n)
-            x_n (NDArray[np.float64]): vector[n] of array X, the noise estimate
+            e_n (NDArray[np.complex128]): Block error in the frequency domain.
+            x_n (NDArray[np.complex128]): Block noise estimate in the frequency domain.
 
         Returns:
             NDArray[np.float64]: The weight update vector for FDAF.
         """
-        return np.array([0.0])
+        return self.mu * np.multiply(np.conj(x_f), e_f)

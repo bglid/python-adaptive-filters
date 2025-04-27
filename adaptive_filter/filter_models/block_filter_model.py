@@ -163,10 +163,14 @@ class BlockFilterModel:
 
             # APA update,  hop = %50 block_size
             if len(x_buffer) == (self.block_size) and (sample % self.hop_size) == 0:
-                # need to re_init buffer
-                x_block = np.stack(x_buffer, axis=1)
-                e_block = np.array(error_buffer)
-                self.W += self.update_step(e_n=e_block, x_n=x_block)
+                if self.algorithm not in ("FDLMS", "FDNLMS"):
+                    x_block = np.stack(x_buffer, axis=1)
+                    e_block = np.array(error_buffer)
+                    self.W += self.update_step(e_n=e_block, x_n=x_block)
+                # else need frequency domain conversion
+                else:
+                    # using sliding DFT matrix here instead of FFT for now
+                    ...
 
         # taking clock-time before running metrics
         elapsed_time = time.perf_counter() - start_time

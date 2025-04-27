@@ -1,21 +1,27 @@
 import numpy as np
 import pytest
 
-from adaptive_filter.algorithms import fd_lms
+from adaptive_filter.algorithms.fd_lms import FDLMS
 
 
 # creating an expected output to test output
 @pytest.mark.parametrize(
-    "mu,e_n,x_n, expected_result",
+    "mu, x_f, e_f, expected_result",
     [
-        (0.5, 2.0, np.array([1.0, -1.0]), np.array([0.5, -0.5])),
-        (1.0, 1.0, np.array([5.0, 2.0]), np.array([0.17241375, 0.0689655])),
-        (-1.0, 1.0, np.array([0.5, 0.25]), np.array([-1.6, -0.8])),
+        (0.5, np.array([1.0 + 0j]), np.array([2.0 + 0j]), np.array([1.0 + 0j])),
+        (1.0, np.array([1.0 + 1j]), np.array([2.0 - 1j]), np.array([1.0 - 3j])),
+        (
+            0.1,
+            np.array([2.0 + 0j, 1.0 - 1j]),
+            np.array([4.0 + 0j, 2.0 + 2j]),
+            np.array([0.1 * (2 * 4.0) + 0j, 0.1 * ((1 + 1j) * (2 + 2j))]),
+        ),
     ],
 )
-def test_update_step(mu, e_n, x_n, expected_result):
+def test_update_step(mu, x_f, e_f, expected_result):
     # creating filter object
-    filter = fd_lms.FD_LMS(mu=mu, n=len(x_n))
-    output = filter.update_step(e_n, x_n)
+    filter = FDLMS(mu=mu, n=len(x_f), block_size=32)
+    output = filter.update_step(e_f, x_f)
     assert isinstance(output, np.ndarray)
+    assert output.shape == expected_result.shape
     np.testing.assert_allclose(output, expected_result, rtol=1e-5, atol=1e-6)
