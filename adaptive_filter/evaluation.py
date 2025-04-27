@@ -361,7 +361,7 @@ if __name__ == "__main__":
     #     mu=0.01,
     #     algorithm="LMS",
     #     noise="all",
-    #     delay_amount=10.0,
+    #     delay_amount=1.0,
     #     random_noise_amount=30,
     #     fs=16000,
     #     block_size=0,
@@ -369,11 +369,11 @@ if __name__ == "__main__":
     #     save_result=True,
     # )
     # full_evaluation(
-    #     filter_order=8,
+    #     filter_order=16,
     #     mu=0.001,
     #     algorithm="NLMS",
     #     noise="all",
-    #     delay_amount=10.0,
+    #     delay_amount=1.0,
     #     random_noise_amount=30,
     #     fs=16000,
     #     block_size=0,
@@ -381,11 +381,11 @@ if __name__ == "__main__":
     #     save_result=True,
     # )
     # full_evaluation(
-    #     filter_order=32,
+    #     filter_order=16,
     #     mu=0.999,
     #     algorithm="RLS",
     #     noise="all",
-    #     delay_amount=30.0,
+    #     delay_amount=1.0,
     #     random_noise_amount=30,
     #     fs=16000,
     #     block_size=0,
@@ -393,14 +393,14 @@ if __name__ == "__main__":
     #     save_result=True,
     # )
     full_evaluation(
-        filter_order=64,
-        mu=0.01,
+        filter_order=16,
+        mu=0.001,
         algorithm="APA",
         noise="all",
-        delay_amount=10.0,
+        delay_amount=1.0,
         random_noise_amount=30,
         fs=16000,
-        block_size=4,
+        block_size=6,
         snr_levels=1,
         save_result=True,
     )
