@@ -51,15 +51,14 @@ class STFT:
             windowed_frame = (
                 signal[current_frame : current_frame + self.window_length] * self.window
             )
-            # windowed_frame = self.window * frame_j
             # padding the window
             padded_window = np.pad(windowed_frame, (0, padding_diff), mode="constant")
 
-            # frames[j] = self.fft(padded_window)
-            # frames[j] = np.fft.rfft(windowed_frame)
-            full_ftt = self.fft(padded_window)
-            # full_ftt = np.fft.rfft(padded_window)
+            # full_ftt = self.fft(padded_window)
             # frames[j] = full_ftt[: len(full_ftt) // 2 + 1]
+
+            # np version below:
+            frames[j] = np.fft.rfft(padded_window)
 
             # testing
             # np.testing.assert_allclose(

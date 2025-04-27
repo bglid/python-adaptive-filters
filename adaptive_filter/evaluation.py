@@ -404,15 +404,27 @@ if __name__ == "__main__":
     #     snr_levels=1,
     #     save_result=True,
     # )
+    # full_evaluation(
+    #     filter_order=16,
+    #     mu=0.001,
+    #     algorithm="FDLMS",
+    #     noise="all",
+    #     delay_amount=0.0,
+    #     random_noise_amount=30,
+    #     fs=16000,
+    #     block_size=8,
+    #     snr_levels=1,
+    #     save_result=True,
+    # )
     full_evaluation(
         filter_order=16,
         mu=0.001,
-        algorithm="FDLMS",
+        algorithm="FDNLMS",
         noise="all",
         delay_amount=0.0,
         random_noise_amount=30,
         fs=16000,
-        block_size=32,
+        block_size=8,
         snr_levels=1,
         save_result=True,
     )
