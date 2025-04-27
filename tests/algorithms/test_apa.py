@@ -21,7 +21,7 @@ from adaptive_filter.algorithms import apa
 def test_update_step(mu, error_vec, x_mat, expected_result):
     # need to get columns in x_mat
     # creating filter object
-    ap_filter = apa.APA(mu=mu, n=x_mat.shape[0])
+    ap_filter = apa.APA(mu=mu, n=x_mat.shape[0], block_size=x_mat.shape[1])
     output = ap_filter.update_step(error_vec, x_mat)
     assert isinstance(output, np.ndarray)
     assert output.shape == (x_mat[0].shape)

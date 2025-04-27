@@ -8,8 +8,8 @@ from adaptive_filter.filter_models.filter_model import FilterModel
 # We only update the update step
 class LMS(FilterModel):
     def __init__(self, mu: float, n: int) -> None:
-        self.mu = mu
-        self.N = n
+        # writing to super
+        super().__init__(mu=mu, filter_order=n)
         self.algorithm = "LMS"
 
     # updating the update step for LMS algorithm

@@ -2,7 +2,6 @@
 from typing import Any
 
 import time
-from collections import deque
 
 import numpy as np
 from numpy.typing import NDArray
@@ -124,9 +123,6 @@ class FilterModel:
 
         # creating a ciruclar buffer for the filter taps
         circ_buffer = np.zeros(self.N, dtype=float)
-        # for APA
-        x_buffer = deque(maxlen=self.N)
-        error_buffer = deque(maxlen=self.N)
 
         # clock-time for how long filtering this signal takes
         start_time = time.perf_counter()
@@ -142,19 +138,10 @@ class FilterModel:
             error[sample] = self.error(
                 d_n=d[sample], noise_estimate=noise_estimate[sample]
             )
-            # to comply with APA
-            x_buffer.append(circ_buffer.copy())
-            error_buffer.append(error[sample])
 
-            if self.algorithm != "APA":
-                # updating the weights
-                self.W += self.update_step(e_n=error[sample], x_n=circ_buffer)
-                mse_history[sample] = error[sample] ** 2
-            # APA update
-            elif len(x_buffer) == self.N and self.algorithm == "APA":
-                apa_x = np.stack(x_buffer, axis=1)
-                apa_e = np.array(error_buffer)
-                self.W += self.update_step(e_n=apa_e, x_n=apa_x)
+            # updating the weights
+            self.W += self.update_step(e_n=error[sample], x_n=circ_buffer)
+            mse_history[sample] = error[sample] ** 2
 
         # taking clock-time before running metrics
         elapsed_time = time.perf_counter() - start_time

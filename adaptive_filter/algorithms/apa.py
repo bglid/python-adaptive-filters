@@ -1,13 +1,14 @@
 import numpy as np
 from numpy.typing import NDArray
 
-from adaptive_filter.filter_models.filter_model import FilterModel
+from adaptive_filter.filter_models.block_filter_model import BlockFilterModel
 
 
-class APA(FilterModel):
-    def __init__(self, mu: float, n: int) -> None:
-        self.mu = mu
-        self.N = n
+class APA(BlockFilterModel):
+    def __init__(self, mu: float, n: int, block_size: int) -> None:
+        # initializing BlockFilterModel
+        super().__init__(mu=mu, filter_order=n, block_size=block_size)
+
         self.algorithm = "APA"
         self.eps = 1e-8
 
@@ -24,7 +25,7 @@ class APA(FilterModel):
             NDArray[np.float64]: The weight update vector for APA.
         """
         # getting the identity
-        identity = x_n.shape[1]
+        identity = np.eye(self.block_size)
         # calculating part inside of parens for legibility
         inner = x_n.T @ x_n + self.eps * identity
         return self.mu * x_n @ (np.linalg.inv(inner) @ e_n)

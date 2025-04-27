@@ -6,8 +6,8 @@ from adaptive_filter.filter_models.filter_model import FilterModel
 
 class NLMS(FilterModel):
     def __init__(self, mu: float, n: int) -> None:
-        self.mu = mu
-        self.N = n
+        # writing to super
+        super().__init__(mu=mu, filter_order=n)
         self.algorithm = "NLMS"
         self.eps = 1e-6
         self.p = 0.0
