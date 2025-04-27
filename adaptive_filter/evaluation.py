@@ -8,7 +8,7 @@ import librosa
 import numpy as np
 import soundfile as sf
 
-from adaptive_filter.algorithms import apa, frequency_domain, fx_lms, lms, nlms, rls
+from adaptive_filter.algorithms import apa, frequency_domain, lms, nlms, rls
 from adaptive_filter.filter_models.filter_model import FilterModel
 from adaptive_filter.utils import realNoiseSimulator
 

@@ -1,6 +1,6 @@
 import pytest
 
-from adaptive_filter.algorithms import apa, frequency_domain, fx_lms, lms, nlms, rls
+from adaptive_filter.algorithms import apa, frequency_domain, lms, nlms, rls
 from adaptive_filter.evaluation import load_data, noise_evaluation, select_algorithm
 from adaptive_filter.filter_models.filter_model import FilterModel
 
