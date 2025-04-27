@@ -104,8 +104,8 @@ def select_algorithm(
     # Block Algos
     block_algos: dict[str, BlockFilterModel] = {
         "APA": apa.APA(mu=mu, n=filter_order, block_size=block_size),
-        "FD_LMS": fd_lms.FD_LMS(mu=mu, n=filter_order),
-        "FD_NLMS": fd_nlms.FD_NLMS(mu=mu, n=filter_order),
+        "FD_LMS": fd_lms.FD_LMS(mu=mu, n=filter_order, block_size=block_size),
+        "FD_NLMS": fd_nlms.FD_NLMS(mu=mu, n=filter_order, block_size=block_size),
     }
     # filter algorithm is defined by input
     # checking first that input isn't faulty
@@ -383,7 +383,7 @@ if __name__ == "__main__":
     # full_evaluation(
     #     filter_order=32,
     #     mu=0.999,
-    #     algorithm="RMS",
+    #     algorithm="RLS",
     #     noise="all",
     #     delay_amount=30.0,
     #     random_noise_amount=30,
@@ -393,14 +393,14 @@ if __name__ == "__main__":
     #     save_result=True,
     # )
     full_evaluation(
-        filter_order=32,
-        mu=0.001,
+        filter_order=64,
+        mu=0.01,
         algorithm="APA",
         noise="all",
         delay_amount=10.0,
         random_noise_amount=30,
         fs=16000,
-        block_size=8,
+        block_size=4,
         snr_levels=1,
         save_result=True,
     )

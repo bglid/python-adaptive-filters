@@ -13,14 +13,18 @@ from adaptive_filter.utils.metrics import EvaluationSuite
 # SIMILAR to FilterModel, but with block-based processing logic added
 class BlockFilterModel:
     def __init__(
-        self, mu: float, filter_order: int, block_size: int, eps: float = 1e-6
+        self,
+        mu: float,
+        filter_order: int,
+        block_size: int,
     ) -> None:
         self.mu = mu
         self.N = filter_order
         # FFT length or P order for APA
         self.block_size = block_size
+        self.hop_size = block_size // 2
         self.half_bins = self.block_size // 2 + 1
-        self.eps = eps
+        self.eps = 1e-8
         # Algorithm type, defined by subclass algorithm
         self.algorithm = ""
         # # initializing weights
@@ -140,7 +144,6 @@ class BlockFilterModel:
         error_buffer = deque(maxlen=self.block_size)
 
         # clock-time for how long filtering this signal takes
-        test_count = 0
         start_time = time.perf_counter()
         for sample in range(num_samples):
             # using a circular buffer style window technique:
@@ -157,21 +160,13 @@ class BlockFilterModel:
             # Buffering blocks
             x_buffer.append(circ_buffer.copy())
             error_buffer.append(error[sample])
-            test_count += 1
-            print(f"Buffer amount...{test_count}")
 
-            # APA update
-            if len(x_buffer) == self.block_size and self.algorithm == "APA":
-                print(f"UPDATE at block size: {self.block_size}")
-                apa_x = np.stack(x_buffer, axis=1)
-                apa_e = np.array(error_buffer)
-                self.W += self.update_step(e_n=apa_e, x_n=apa_x)
-            # FDAF update
-            if len(x_buffer) == self.block_size and self.algorithm == (
-                "FD_LMS" or "FD_NLMS"
-            ):
-                x_freq = np.stack(x_buffer, axis=1)
-                e_freq = np.array(x_buffer)
+            # APA update,  hop = %50 block_size
+            if len(x_buffer) == (self.block_size) and (sample % self.hop_size) == 0:
+                # need to re_init buffer
+                x_block = np.stack(x_buffer, axis=1)
+                e_block = np.array(error_buffer)
+                self.W += self.update_step(e_n=e_block, x_n=x_block)
 
         # taking clock-time before running metrics
         elapsed_time = time.perf_counter() - start_time

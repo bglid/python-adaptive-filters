@@ -5,9 +5,9 @@ from adaptive_filter.filter_models.block_filter_model import BlockFilterModel
 
 
 class FD_LMS(BlockFilterModel):
-    def __init__(self, mu: float, n: int) -> None:
-        self.mu = mu
-        self.N = n
+    def __init__(self, mu: float, n: int, block_size: int) -> None:
+        # initializing BlockFilterModel
+        super().__init__(mu=mu, filter_order=n, block_size=block_size)
         self.algorithm = "FD_LMS"
         self.eps = 1e-6
 

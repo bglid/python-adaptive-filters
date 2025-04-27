@@ -7,10 +7,7 @@ from adaptive_filter.filter_models.block_filter_model import BlockFilterModel
 class APA(BlockFilterModel):
     def __init__(self, mu: float, n: int, block_size: int) -> None:
         # initializing BlockFilterModel
-        # super().__init__
-        self.mu = mu
-        self.N = n
-        self.block_size = block_size
+        super().__init__(mu=mu, filter_order=n, block_size=block_size)
 
         self.algorithm = "APA"
         self.eps = 1e-8
