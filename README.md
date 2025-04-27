@@ -13,33 +13,20 @@
 ![Coverage Report](assets/images/coverage.svg)
 
 
-*NOTE Project is still in progress, currently only LMS, NLMS, and RLS filters are implemented.* 
+*NOTE Project is still in progress, currently only LMS, NLMS, RLS, and APA filters are implemented.* 
 
 </div>
 
-## LMS, RLS, NLMS, FX_LMS, APA, and Frequency Domain Adaptive filters for Adaptive Noise Cancelling.
+## LMS, RLS, NLMS, APA, and Frequency Domain Adaptive filters for Adaptive Noise Cancelling.
 
-* ###### Python prototype used as a proof of concept to benchmark performance of different filter algorithms on noisy speech. Part of a project to implement embedded adaptive filters using C++.
+* ###### Python implementation used as a proof of concept to benchmark performance of different filter algorithms on noisy speech. Part of a project to implement embedded adaptive filters using C++.
 
  - - -
 ## 🛡 License
 
-[![License](https://img.shields.io/github/license/bglid/adaptive_filter)](https://github.com/bglid/adaptive_filter/blob/master/LICENSE)
 
 This project is licensed under the terms of the `MIT` license. See [LICENSE](https://github.com/bglid/adaptive_filter/blob/master/LICENSE) for more details.
  - - -
-## 📃 Citation
-
-```bibtex
-@misc{adaptive_filter,
-  author = {bglid},
-  title = {Python implementation of DSP adaptive filters},
-  year = {2025},
-  publisher = {GitHub},
-  journal = {GitHub repository},
-  howpublished = {\url{https://github.com/bglid/adaptive_filter}}
-}
-```
 
 ## Credits [![🚀 Your next Python package needs a bleeding-edge project structure.](https://img.shields.io/badge/python--package--template-%F0%9F%9A%80-brightgreen)](https://github.com/TezRomacH/python-package-template)
 
@@ -56,5 +43,18 @@ The MS-SNSD Dataset was used for evaluating filter algorithm performance:
   journal={Proc. Interspeech 2019},
   pages={1816--1820},
   year={2019}
+}
+```
+
+## 📃 Citation
+Hey! If you found any of this helpful, feel free to cite it, or just send me a message.
+```bibtex
+@misc{adaptive_filter,
+  author = {bglid},
+  title = {Python implementation of DSP adaptive filters},
+  year = {2025},
+  publisher = {GitHub},
+  journal = {GitHub repository},
+  howpublished = {\url{https://github.com/bglid/adaptive_filter}}
 }
 ```
