@@ -218,7 +218,7 @@ def noise_evaluation(
         all_adapt_mse[i] = adapt_mse_i
         all_speech_mse[i] = speech_mse_i
         all_snr[i] = snr_i
-        # print(f"\nSNR global: {snr_i}\n")
+        print(f"\nSNR global: {snr_i}\n")
         all_delta_snr[i] = delta_snr_i
         print(f"SNR Delta: {delta_snr_i}\n")
         all_time[i] = time_i
@@ -392,27 +392,27 @@ if __name__ == "__main__":
     #     snr_levels=1,
     #     save_result=True,
     # )
-    full_evaluation(
-        filter_order=16,
-        mu=0.001,
-        algorithm="APA",
-        noise="all",
-        delay_amount=1.0,
-        random_noise_amount=30,
-        fs=16000,
-        block_size=6,
-        snr_levels=1,
-        save_result=True,
-    )
     # full_evaluation(
     #     filter_order=16,
     #     mu=0.001,
-    #     algorithm="FDLMS",
+    #     algorithm="APA",
     #     noise="all",
     #     delay_amount=1.0,
     #     random_noise_amount=30,
     #     fs=16000,
-    #     block_size=16,
+    #     block_size=6,
     #     snr_levels=1,
     #     save_result=True,
     # )
+    full_evaluation(
+        filter_order=16,
+        mu=0.001,
+        algorithm="FDLMS",
+        noise="all",
+        delay_amount=0.0,
+        random_noise_amount=30,
+        fs=16000,
+        block_size=32,
+        snr_levels=1,
+        save_result=True,
+    )

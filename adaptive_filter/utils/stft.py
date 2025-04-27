@@ -40,22 +40,25 @@ class STFT:
         n_frames = 1 + (n - self.window_length) // self.hop_size
         frames = np.empty((n_frames, self.window_length // 2 + 1), dtype=np.complex128)
         # Creating an array to hold the results per fft
-        # results = np.zeros(
-        #     (1 + (self.window_length + padding_diff) // 2, frames),
+        # frames = np.zeros(
+        #     (1 + (self.window_length + padding_diff) // 2, n_frames),
         #     dtype=np.complex128,
         # )
 
         for j in range(n_frames):
             current_frame = j * self.hop_size
-            frame_j = signal[
-                int(current_frame) : int(current_frame + self.window_length)
-            ]
-            windowed_frame = self.window * frame_j
+            # frame_j = signal[current_frame : current_frame + self.window_length]
+            windowed_frame = (
+                signal[current_frame : current_frame + self.window_length] * self.window
+            )
+            # windowed_frame = self.window * frame_j
             # padding the window
             padded_window = np.pad(windowed_frame, (0, padding_diff), mode="constant")
 
-            frames[j] = self.fft(padded_window)
-            # full_ftt = self.fft(padded_window)
+            # frames[j] = self.fft(padded_window)
+            # frames[j] = np.fft.rfft(windowed_frame)
+            full_ftt = self.fft(padded_window)
+            # full_ftt = np.fft.rfft(padded_window)
             # frames[j] = full_ftt[: len(full_ftt) // 2 + 1]
 
             # testing
@@ -65,25 +68,25 @@ class STFT:
         return frames
 
     # to inverse this, we basically want the same procedure, but going in the other direction
-    def istft(self, frames: NDArray[Any]) -> NDArray[np.float64]:
-        frames, sample_length = frames.shape
-        assert sample_length == self.window_length // 2 + 1
+    def istft(self, frames: NDArray[np.complex128]) -> NDArray[np.float64]:
+        n_frames, n_sample_length = frames.shape
+        assert n_sample_length == self.window_length // 2 + 1
 
         # the output length should be the frames * N/2
-        output_length = (frames - 1) * self.hop_size + self.window_length
+        output_length = (n_frames - 1) * self.hop_size + self.window_length
         overlapped_row = np.zeros(output_length)
         # adding a weight matrix to divide by to handle overlapping samples
         weight_matrix = np.zeros(output_length)
         # setting a loop until we reach the last possible frame
-        for index, frame in enumerate(frames):
+        for index, freq in enumerate(frames):
             # adjusting window size to reflect going in opposite direction
-            window = np.fft.irfft(frame, n=self.window_length)
+            window = np.fft.irfft(freq, n=self.window_length)
             current_frame = index * self.hop_size
             overlapped_row[current_frame : current_frame + self.window_length] += (
                 window * self.window
             )
             # updating weight matrix similarly
-            weight_matrix[current_frame + current_frame + self.window_length] += (
+            weight_matrix[current_frame : current_frame + self.window_length] += (
                 self.window**2
             )
 
