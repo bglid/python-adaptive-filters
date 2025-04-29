@@ -181,13 +181,18 @@ def noise_evaluation(
 
     # Run the filtering algorithm per instance of noise
     for i in range(noise_list.shape[0]):
+        # If not doing ALE
         # making the noise references more "real"
-        noise_list_mic = realNoiseSimulator.mic_white_noise(
-            noise_list[i], snr_input=random_noise_amount
-        )
-        real_noise_sample = realNoiseSimulator.reference_delay(
-            noise_list_mic, delay_amount=delay_amount, fs=fs
-        )
+        if ale is False:
+            noise_list_mic = realNoiseSimulator.mic_white_noise(
+                noise_list[i], snr_input=random_noise_amount
+            )
+            real_noise_sample = realNoiseSimulator.reference_delay(
+                noise_list_mic, delay_amount=delay_amount, fs=fs
+            )
+        else:
+            # Run ALE to get real_noise_sample
+            real_noise_sample = ...
         error, noise_estimate, adapt_mse_i, speech_mse_i, snr_i, delta_snr_i, time_i = (
             af_filter.filter(
                 d=noisy_speech_list[i],
