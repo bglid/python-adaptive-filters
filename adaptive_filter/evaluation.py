@@ -11,7 +11,7 @@ import soundfile as sf
 from adaptive_filter.algorithms import apa, fd_lms, fd_nlms, lms, nlms, rls
 from adaptive_filter.filter_models.block_filter_model import BlockFilterModel
 from adaptive_filter.filter_models.filter_model import FilterModel
-from adaptive_filter.utils import realNoiseSimulator
+from adaptive_filter.utils import adaptiveLineEnhancer, realNoiseSimulator
 
 
 # function for loading the data for evaluation
@@ -144,6 +144,8 @@ def noise_evaluation(
     block_size: int = 0,
     snr_levels: int = 1,
     save_result: bool = False,
+    ale: bool = False,
+    ale_delay: int = 0,
 ) -> dict[str, float]:
     """Iterates Adaptive filter algorithm over full dataset of noise, returning Average result. NOTE: Files must be presorted
 
@@ -160,6 +162,10 @@ def noise_evaluation(
         snr_levels (int): How many differing SNR levels are tested. Default is 5.
         save_result (bool):
             Whether or not individual .wav files and plots should be written or saved. Default is False.
+        ale (bool):
+            Whether or not to create noise reference using Adaptive Line Enhancer.
+        ale_delay (int):
+            How much, in samples, the ALE should delay the signal to create the reference.
 
     Returns:
         dict: Dictionary of mean result for each metric for provided noise set.
@@ -181,13 +187,23 @@ def noise_evaluation(
 
     # Run the filtering algorithm per instance of noise
     for i in range(noise_list.shape[0]):
+        # If not doing ALE
         # making the noise references more "real"
-        noise_list_mic = realNoiseSimulator.mic_white_noise(
-            noise_list[i], snr_input=random_noise_amount
-        )
-        real_noise_sample = realNoiseSimulator.reference_delay(
-            noise_list_mic, delay_amount=delay_amount, fs=fs
-        )
+        if ale is False:
+            noise_list_mic = realNoiseSimulator.mic_white_noise(
+                noise_list[i], snr_input=random_noise_amount
+            )
+            real_noise_sample = realNoiseSimulator.reference_delay(
+                noise_list_mic, delay_amount=delay_amount, fs=fs
+            )
+
+        # Run ALE to get real_noise_sample
+        else:
+            # print("Using ALE!")
+            real_noise_sample = adaptiveLineEnhancer.adaptive_line_enhancer(
+                noisy_speech_list[i], ale_delay=ale_delay
+            )
+
         error, noise_estimate, adapt_mse_i, speech_mse_i, snr_i, delta_snr_i, time_i = (
             af_filter.filter(
                 d=noisy_speech_list[i],
@@ -218,7 +234,7 @@ def noise_evaluation(
         all_adapt_mse[i] = adapt_mse_i
         all_speech_mse[i] = speech_mse_i
         all_snr[i] = snr_i
-        print(f"\nSNR global: {snr_i}\n")
+        # print(f"\nSNR global: {snr_i}\n")
         all_delta_snr[i] = delta_snr_i
         print(f"SNR Delta: {delta_snr_i}\n")
         all_time[i] = time_i
@@ -244,6 +260,8 @@ def full_evaluation(
     block_size: int = 0,
     snr_levels: int = 1,
     save_result: bool = False,
+    ale: bool = False,
+    ale_delay: int = 0,
 ) -> dict[str, dict[str, float]]:
     """Runs the evaluation aggregated evalutaion metrics for each noise type provided. Writes final results to a .csv.
 
@@ -260,6 +278,10 @@ def full_evaluation(
         snr_levels (int): How many differing SNR levels are tested. Default is 5.
         save_result (bool):
             Whether or not individual .wav files and plots should be written or saved. Default is False.
+        ale (bool):
+            Whether or not to create noise reference using Adaptive Line Enhancer.
+        ale_delay (int):
+            How much, in samples, the ALE should delay the signal to create the reference.
 
     Returns:
         dict: Dictionary of dictionaries, each containing the metrics for a given noise type.
@@ -297,6 +319,8 @@ def full_evaluation(
                 block_size=block_size,
                 snr_levels=snr_levels,
                 save_result=save_result,
+                ale=ale,
+                ale_delay=ale_delay,
             )
 
             final_results[f"{algorithm} All {valid_noise[i]} results "] = result
@@ -356,18 +380,20 @@ def full_evaluation(
 
 if __name__ == "__main__":
 
-    # full_evaluation(
-    #     filter_order=16,
-    #     mu=0.01,
-    #     algorithm="LMS",
-    #     noise="all",
-    #     delay_amount=1.0,
-    #     random_noise_amount=30,
-    #     fs=16000,
-    #     block_size=0,
-    #     snr_levels=1,
-    #     save_result=True,
-    # )
+    full_evaluation(
+        filter_order=32,
+        mu=0.01,
+        algorithm="LMS",
+        noise="all",
+        delay_amount=2.0,
+        random_noise_amount=30,
+        fs=16000,
+        block_size=0,
+        snr_levels=1,
+        save_result=True,
+        ale=True,
+        ale_delay=6,
+    )
     # full_evaluation(
     #     filter_order=16,
     #     mu=0.001,
@@ -416,15 +442,15 @@ if __name__ == "__main__":
     #     snr_levels=1,
     #     save_result=True,
     # )
-    full_evaluation(
-        filter_order=16,
-        mu=0.001,
-        algorithm="FDNLMS",
-        noise="all",
-        delay_amount=0.0,
-        random_noise_amount=30,
-        fs=16000,
-        block_size=8,
-        snr_levels=1,
-        save_result=True,
-    )
+    # full_evaluation(
+    #     filter_order=16,
+    #     mu=0.001,
+    #     algorithm="FDNLMS",
+    #     noise="all",
+    #     delay_amount=0.0,
+    #     random_noise_amount=30,
+    #     fs=16000,
+    #     block_size=8,
+    #     snr_levels=1,
+    #     save_result=True,
+    # )
