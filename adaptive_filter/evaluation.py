@@ -11,7 +11,7 @@ import soundfile as sf
 from adaptive_filter.algorithms import apa, fd_lms, fd_nlms, lms, nlms, rls
 from adaptive_filter.filter_models.block_filter_model import BlockFilterModel
 from adaptive_filter.filter_models.filter_model import FilterModel
-from adaptive_filter.utils import realNoiseSimulator
+from adaptive_filter.utils import adaptiveLineEnhancer, realNoiseSimulator
 
 
 # function for loading the data for evaluation

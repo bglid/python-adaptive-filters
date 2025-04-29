@@ -1,9 +1,11 @@
-# ADAPTIVE LINE ENHANCEMENT UTIL
+# ADAPTIVE LINE ENHANCER UTIL
 import numpy as np
 from numpy.typing import NDArray
 
 
-def ale(d: NDArray[np.float64], ale_delay: int) -> NDArray[np.float64]:
+def adaptive_line_enhancer(
+    d: NDArray[np.float64], ale_delay: int
+) -> NDArray[np.float64]:
     """...
 
     Args:
