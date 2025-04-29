@@ -57,6 +57,7 @@ class FilterModel:
         d: NDArray[np.float64],
         x: NDArray[np.float64],
         clean_signal: NDArray[np.float64],
+        return_metrics=False,
     ) -> tuple:
         """Iterates Adaptive filter alorithm and updates for length of input signal X
 
@@ -67,16 +68,18 @@ class FilterModel:
                 Input reference matrix X, which in the ANC case is the noise reference.
             clean_signal (NDArray[np.float64]):
                 Clean signal for final reference.
+            return_metrics (bool):
+                Check whether to return all calculated metrics. False by default.
 
         Returns:
-            tuple: A tuple containing:
+            tuple: A tuple containing the first two values if return metrics is False:
                 - NDArray[np.float64]: "Clean output" The error signal of d - y.
                 - NDArray[np.float64]: Predicted noise estimate.
-                - float: Mean of the Adaption MSE across the signal.
-                - float: Mean of the Speech MSE across the signal.
-                - float: Global SNR across the signal.
-                - float: Delta SNR improvement
-                - float: Clock-time of filter performance
+                - float: If return Metrics=True: Mean of the Adaption MSE across the signal.
+                - float: If return Metrics=True:Mean of the Speech MSE across the signal.
+                - float: If return Metrics=True:Global SNR across the signal.
+                - float: If return Metrics=True:Delta SNR improvement
+                - float: If return Metrics=True:Clock-time of filter performance
 
         Raises:
             ValueError: If Signal dims are not compatible (1D)
@@ -118,9 +121,6 @@ class FilterModel:
         noise_estimate = np.zeros(num_samples)
         error = np.zeros(num_samples)
 
-        # creating an array to track MSE history for convergence metrics
-        mse_history = np.zeros(num_samples)
-
         # creating a ciruclar buffer for the filter taps
         circ_buffer = np.zeros(self.N, dtype=float)
 
@@ -141,7 +141,10 @@ class FilterModel:
 
             # updating the weights
             self.W += self.update_step(e_n=error[sample], x_n=circ_buffer)
-            mse_history[sample] = error[sample] ** 2
+
+        # Only returning signals if metrics is false
+        if return_metrics is False:
+            return error, noise_estimate
 
         # taking clock-time before running metrics
         elapsed_time = time.perf_counter() - start_time
@@ -160,8 +163,15 @@ class FilterModel:
         # # getting the Delta SNR
         snr_in = evaluation_runner.SNR(clean_flat, d_flat)  # SNR without filtering
         delta_snr = snr_result - snr_in
+        # getting convergence time
+        convergence_time = evaluation_runner.convergence_time(
+            error=error_flat,
+            fs=16000,
+            samples_steady=300,
+            r_tol=0.05,
+            consecutive_samples=32,
+        )
 
-        # NOTE: need to return MSE history...
         return (
             error,
             noise_estimate,
@@ -170,4 +180,5 @@ class FilterModel:
             snr_result,
             delta_snr,
             elapsed_time,
+            convergence_time,
         )

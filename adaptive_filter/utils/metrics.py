@@ -4,9 +4,6 @@ EVALUATION METRICS: MSE, SNR, Convergence (rate and time), Misadjustment, Clock 
 
 from typing import Any
 
-import collections
-import time
-
 import numpy as np
 from numpy.typing import NDArray
 
@@ -102,29 +99,49 @@ class EvaluationSuite:
         return 10 * np.log10(snr + 1e-12)
 
     # function for Convergance
-    def lms_convergence_rate(
+    def convergence_time(
         self,
-        step_size: float,
-        input_signal: np.ndarray[Any, np.dtype[Any]],
-        k: int,
-    ) -> Any:
-        """Calculates the first-order convergance rate of the mean-square error dependent on mu and autocorrelation eigenvalue.
-        This process is done by first taking the autocorrelation (R) of the input data, X^K, where K indicates time.
-        Then, eigendecomposition is run to get the the min eigenvalue, indicating the slowet possible decay,
-        which is used in the final calc. (1 - 2 * step_size * lambda_i)^K
+        error: NDArray[np.float64],
+        fs: int,
+        samples_steady: int,
+        r_tol: float,
+        consecutive_samples: int,
+    ) -> np.float64:
+        """Time in seconds at it takes for the error to first fall into the steady-state convergence.
+
+        Args:
+            error (NDArray[np.float64]): Signal Error
+            fs (int): Sampling rate
+            samples_steady (int): number of last samples to average for steady-state.
+            r_tol (float): Relative tolerance
+            consecutive_samples (int): Number of consec. samples needed to delcare convergence.
+
+        Returns:
+            np.float64: Convergence time in seconds.
         """
-        # first we get the autocorrelation matrix R = X^{k}
-        autocorrelation = np.dot(input_signal, input_signal.T)
-        # Running Eigendecomposition on the auto correlation
-        eigen = EigenDecomposition(k_iterations=25)
-        W, lambda_matrix, eigenvalues = eigen.eigendecomposition(
-            covariance_matrix=autocorrelation, n_eigenvectors=10
-        )
-        # getting the smallest eigenvalue for our convergence rate after K time
-        max_lambda = np.min(eigenvalues)
-        return np.abs(1 - 2 * step_size * max_lambda) ** k
 
+        # get the steady error
+        steady_error = np.mean(np.abs(error[-samples_steady:]))
 
-if __name__ == "__main__":
+        # set the error threshold
+        thresh = (1 + r_tol) * steady_error
+        below_thresh = np.abs(error) <= thresh
 
-    evaluation = EvaluationSuite(algorithm="LMS")
+        # checking for different lengths of consec samples
+        if consecutive_samples > 1:
+            #  compute rowwing sum of below over length of consec samples
+            summation = np.cumsum(np.concatenate([[0], below_thresh]))
+            for i in range(len(error) - consecutive_samples + 1):
+                if (
+                    summation[i + consecutive_samples] - summation[i]
+                ) == consecutive_samples:
+                    return i / fs  # returning in seconds
+            # else return nan
+            return np.nan
+
+        # else when consec is just 1
+        else:
+            id = np.where(below_thresh)[0]
+            if id.size == 0:
+                return np.nan
+            return id[0] / fs
