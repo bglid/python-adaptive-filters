@@ -26,4 +26,4 @@ class FDLMS(FrequencyDomainAF):
         Returns:
             NDArray[np.float64]: The weight update vector for FDAF.
         """
-        return self.mu * np.multiply(np.conj(x_f), e_f)
+        return self.mu * np.conj(x_f) * e_f

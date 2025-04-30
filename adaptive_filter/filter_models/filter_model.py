@@ -169,7 +169,7 @@ class FilterModel:
             fs=16000,
             samples_steady=300,
             r_tol=0.05,
-            consecutive_samples=32,
+            consecutive_samples=5,
         )
 
         return (

@@ -28,5 +28,5 @@ class FDNLMS(FrequencyDomainAF):
             NDArray[np.float64]: The weight update vector for FDAF.
         """
         # getting the normalizing denom
-        self.p = self.eps + np.linalg.norm(x_f) ** 2
-        return self.mu * np.multiply(np.conj(x_f), e_f) / self.p
+        self.p = self.eps + np.sum(np.abs(x_f) ** 2)
+        return self.mu * np.conj(x_f) * e_f / self.p

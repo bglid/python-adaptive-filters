@@ -163,8 +163,8 @@ class BlockFilterModel:
             x_buffer.append(circ_buffer.copy())
             error_buffer.append(error[sample])
 
-            # APA update,  hop = %50 block_size
-            if len(x_buffer) == (self.block_size) and (sample % self.hop_size) == 0:
+            # APA update
+            if len(x_buffer) == (self.block_size):
                 if self.algorithm not in ("FDLMS", "FDNLMS"):
                     x_block = np.stack(x_buffer, axis=1)
                     e_block = np.array(error_buffer)
@@ -197,7 +197,7 @@ class BlockFilterModel:
             fs=16000,
             samples_steady=300,
             r_tol=0.05,
-            consecutive_samples=32,
+            consecutive_samples=5,
         )
 
         return (
@@ -302,6 +302,11 @@ class FrequencyDomainAF(BlockFilterModel):
             d = d[: clean_signal.shape[0]]
             x = x[: clean_signal.shape[0]]
 
+        # pad amount
+        P = 1 << int(np.ceil(np.log2(self.N + self.hop_size - 1)))
+        # padding the impulse response
+        self.H = np.fft.rfft(np.pad(self.W, (0, P - self.N)), n=P)
+
         # getting the number of samples from x len
         num_samples = len(x)
 
@@ -312,44 +317,67 @@ class FrequencyDomainAF(BlockFilterModel):
         noise_estimate = np.zeros(num_samples)
         error = np.zeros(num_samples)
 
-        # creating a ciruclar buffer for the filter taps
-        circ_buffer = np.zeros(self.N, dtype=float)
-        desired_circ_buffer = np.zeros(self.N, dtype=float)
-        # for buffering blocks
-        x_buffer = deque(maxlen=self.block_size)
-        error_buffer = deque(maxlen=self.block_size)
-
         # clock-time for how long filtering this signal takes
         start_time = time.perf_counter()
-        for sample in range(num_samples):
-            # using a circular buffer style window technique:
-            circ_buffer = np.roll(circ_buffer, 1)
-            desired_circ_buffer = np.roll(desired_circ_buffer, 1)
-            # writer-pointer to add the most recent sample into the N buffer window
-            circ_buffer[0] = x[sample]
-            desired_circ_buffer[0] = d[sample]
-            # Buffering blocks
-            x_buffer.append(x[sample])
-            # error_buffer.append(error[sample])
+        # handling odd or '1' sample leftovers
+        for sample in range(0, num_samples - self.hop_size + 1, self.hop_size):
+            block = x[sample : sample + P]
+            if len(block) < P:
+                block = np.pad(block, (0, P - len(block)))
 
-            # FD update,  hop = %50 block_size
-            if len(x_buffer) == (self.block_size) and (sample % self.hop_size) == 0:
-                # STFT
-                x_f = self.stft.stft(np.array(x_buffer))
-                d_f = self.stft.stft(
-                    np.array(d[sample - self.block_size + 1 : sample + 1])
+            # converting our block of input to the F domain
+            x_f = np.fft.rfft(block)
+
+            # getting our output via "convolution" in F domain
+            y_f = self.H * x_f
+            y_time = np.fft.irfft(y_f, n=P)
+
+            # getting the overlapping
+            valid = y_time[self.N - 1 : self.N - 1 + self.hop_size]
+            noise_estimate[sample : sample + self.hop_size] = np.real(valid)
+
+            # getting the overlapping error
+            error[sample : sample + self.hop_size] = (
+                d[sample : sample + self.hop_size]
+                - noise_estimate[sample : sample + self.hop_size]
+            )
+
+            # now update H
+            e_f = np.fft.rfft(
+                np.pad(error[sample : sample + self.hop_size], (0, P - self.hop_size)),
+                n=P,
+            )
+
+            self.H += self.update_step(e_f, x_f)
+
+            # checking for leftover
+            leftover_sample = (num_samples // self.hop_size) * self.hop_size
+            if leftover_sample < num_samples:
+                block = x[leftover_sample : leftover_sample + P]
+                block = np.pad(block, (0, P - len(block)))
+
+                # converting our block of input to the F domain
+                x_f = np.fft.rfft(block)
+
+                # getting our output via "convolution" in F domain
+                y_f = self.H * x_f
+                y_time = np.fft.irfft(y_f, n=P)
+
+                # getting the overlapping
+                valid = y_time[
+                    self.N - 1 : self.N - 1 + (num_samples - leftover_sample)
+                ]
+                noise_estimate[leftover_sample:] = np.real(valid)
+
+                # getting the overlapping error
+                error[leftover_sample:] = d[leftover_sample:] - valid
+
+                # now update H
+                e_f = np.fft.rfft(
+                    np.pad(valid, (0, P - len(valid))),
+                    n=P,
                 )
-                # now in F domain, noise estimate is just mult.
-                y_f = self.W * x_f[0]
-                # error easily is DF - YF
-                e_f = d_f[0] - y_f
-                # now updating with FD in mind
-                self.W += self.update_step(e_f=e_f, x_f=x_f[0])
-                # appending time domain of yf and ef
-                start = sample - self.block_size + 1
-                end = sample + 1
-                noise_estimate[start:end] = self.stft.istft(y_f[np.newaxis, :])
-                error[start:end] = self.stft.istft(e_f[np.newaxis, :])
+                self.H += self.update_step(e_f, x_f)
 
         # Only returning signals if metrics is false
         if return_metrics is False:
@@ -360,7 +388,7 @@ class FrequencyDomainAF(BlockFilterModel):
 
         # to avoid memory issues, need to ensure signals are same shape
         d_flat, y_flat, clean_flat, error_flat = evaluation_runner.signal_reshaper(
-            d, noise_estimate, clean_signal, error
+            d, y_time, clean_signal, error
         )
 
         # What algo minimized
@@ -378,7 +406,7 @@ class FrequencyDomainAF(BlockFilterModel):
             fs=16000,
             samples_steady=300,
             r_tol=0.05,
-            consecutive_samples=32,
+            consecutive_samples=5,
         )
 
         return (
