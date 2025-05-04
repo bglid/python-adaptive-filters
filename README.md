@@ -20,7 +20,7 @@
 
 * ###### Python implementation used as a proof of concept to benchmark performance of different filter algorithms on noisy speech. Created as a final project for a masters course in DSP. Part of a project to implement [embedded adaptive filters using C++ and Bela](https://github.com/bglid/Bela-NLMS-ANC#).
 
-* *Note* - The frequency domain filters need some work. Currently their performance is not adequate for legit use-cases. 
+* ###### *Note* - The frequency domain filters need some work. Currently their performance is not adequate for legit use-cases. 
 
  - - - 
  ## Project Background:
@@ -115,12 +115,6 @@ make pre-commit-install
 </p>
 </details>
 
- - - - 
- ## How to use: Filters
-```
-
-```
-
  - - -
  ## How to use: Evalulation Script
 
@@ -164,6 +158,12 @@ Block-size = 3
 ...
  
  ```
+
+ - - - 
+ ## How to use: Filters
+```
+
+```
 
  - - -
 ## 🛡 License
