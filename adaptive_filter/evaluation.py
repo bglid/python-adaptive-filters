@@ -460,8 +460,8 @@ if __name__ == "__main__":
         fs=16000,
         block_size=2,
         snr_levels=1,
-        save_result=True,
-        ale=True,
+        save_result=False,
+        ale=False,
         ale_delay=140,
     )
     # full_evaluation(
