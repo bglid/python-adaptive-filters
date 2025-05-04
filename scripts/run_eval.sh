@@ -10,6 +10,5 @@ if [ $# -lt 1 ]; then
 fi
 
 # passing args through entry point per noise type
-# AC
 python -m adaptive_filter.main \
   --eval=True --filter_order=32 --mu=0.001 --algorithm "$@" --noise="all"
