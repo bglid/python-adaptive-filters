@@ -422,20 +422,20 @@ if __name__ == "__main__":
     #     ale=True,
     #     ale_delay=6,
     # )
-    # full_evaluation(
-    #     filter_order=32,
-    #     mu=0.001,
-    #     algorithm="NLMS",
-    #     noise="all",
-    #     delay_amount=2.0,
-    #     random_noise_amount=35,
-    #     fs=16000,
-    #     block_size=0,
-    #     snr_levels=1,
-    #     save_result=False,
-    #     ale=True,
-    #     ale_delay=14,
-    # )
+    full_evaluation(
+        filter_order=32,
+        mu=0.001,
+        algorithm="NLMS",
+        noise="all",
+        delay_amount=2.0,
+        random_noise_amount=35,
+        fs=16000,
+        block_size=0,
+        snr_levels=1,
+        save_result=False,
+        ale=True,
+        ale_delay=14,
+    )
     # full_evaluation(
     #     filter_order=32,
     #     mu=0.999,
@@ -450,20 +450,20 @@ if __name__ == "__main__":
     #     ale=True,
     #     ale_delay=2,
     # )
-    full_evaluation(
-        filter_order=32,
-        mu=0.001,
-        algorithm="APA",
-        noise="all",
-        delay_amount=2.0,
-        random_noise_amount=35,
-        fs=16000,
-        block_size=2,
-        snr_levels=1,
-        save_result=False,
-        ale=False,
-        ale_delay=140,
-    )
+    # full_evaluation(
+    #     filter_order=32,
+    #     mu=0.001,
+    #     algorithm="APA",
+    #     noise="all",
+    #     delay_amount=2.0,
+    #     random_noise_amount=35,
+    #     fs=16000,
+    #     block_size=2,
+    #     snr_levels=1,
+    #     save_result=False,
+    #     ale=False,
+    #     ale_delay=140,
+    # )
     # full_evaluation(
     #     filter_order=16,
     #     mu=0.001,

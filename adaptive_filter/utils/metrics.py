@@ -1,5 +1,5 @@
 """
-EVALUATION METRICS: MSE, SNR, Convergence (rate and time), Misadjustment, Clock time (for algorithm complexity)
+EVALUATION METRICS: MSE, SNR, Convergence, Clock time (for algorithm complexity)
 """
 
 from typing import Any
