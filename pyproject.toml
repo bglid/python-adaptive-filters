@@ -55,7 +55,7 @@ scikit-learn = "1.6.1"
 librosa = "0.11.0"
 soundfile = "0.13.1"
 cryptography = "44.0.1"
-setuptools = "78.1.1"
+setuptools = "80.8.0"
 
 
 
