@@ -7,8 +7,6 @@ from typing import Any
 import numpy as np
 from numpy.typing import NDArray
 
-from adaptive_filter.utils.math_utils import EigenDecomposition
-
 
 class EvaluationSuite:
     def __init__(self, algorithm: str) -> None:

@@ -5,7 +5,8 @@ import time
 from collections import deque
 
 import numpy as np
-from numpy.core.shape_base import block
+
+# from numpy.core.shape_base import block
 from numpy.typing import NDArray
 
 from adaptive_filter.utils.metrics import EvaluationSuite
