@@ -76,9 +76,9 @@ class PlotSuite:
             Union[None, ModuleType]: Returns plot when subplot set to True.
 
         """
-        x_axis = np.arange(0, len(results[error_metric]))
+        x_axis = np.arange(0, len(results))
         plt.title(f"{error_metric} of {self.algorithm}")
-        plt.plot(x_axis, results[error_metric], c="crimson", label=f"{error_metric}")
+        plt.plot(x_axis, results, c="crimson", label=f"{error_metric}")
         plt.title(error_metric)
         plt.ylabel(error_metric)  # rotate this
         # plt.xlabel(f"Time in {self.N} samples")
@@ -92,28 +92,6 @@ class PlotSuite:
         else:
             return plt
 
-    # plot to capture the weight changes over time
-    def weight_adjustments(
-        self,
-        weights: np.ndarray[Any, np.dtype[Any]],
-        time_k: int,
-        subplot: bool = False,
-    ) -> None:
-        """Summary: plots the adjustments to the weights over time k.
-
-        Args:
-            weights (np.ndarray): Vector of weights at time_k
-            time_k (int): Iteration number k.
-            subplot (bool): Bool check for if returning as a part of a larger plot.
-        """
-        pass
-
-        # # if its not a subplot, show results
-        # if subplot is False:
-        #     plt.show()
-        # else:
-        #     return plt
-
     # plot to run all three and return them as subplots in one, if chosen
     def full_plot_suite(
         self,
@@ -121,8 +99,6 @@ class PlotSuite:
         description: str,
         results: np.ndarray[Any, np.dtype[Any]],
         error_metric: str,
-        weights: np.ndarray[Any, np.dtype[Any]],
-        time_k: int,
     ) -> None:
         """Summary: Plots the entire suite of plots available as subplots.
 
@@ -131,8 +107,6 @@ class PlotSuite:
             description (str): String description of plot, used in title
             results (np.ndarray): Vector of error results
             error_metric (str): String description of error_metric, used in title
-            weights (np.ndarray): Vector of weights at time_k
-            time_k (int): Iteration number k.
 
         """
         # creating each individual plot as a subplot
