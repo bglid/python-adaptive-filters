@@ -244,7 +244,6 @@ def noise_evaluation(
         all_adapt_mse[i] = adapt_mse_i
         all_speech_mse[i] = speech_mse_i
         all_snr[i] = snr_i
-        # print(f"\nSNR global: {snr_i}\n")
         all_delta_snr[i] = delta_snr_i
         print(f"SNR Delta: {delta_snr_i}")
         all_time[i] = time_i

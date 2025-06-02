@@ -1,6 +1,8 @@
 import pytest
+from librosa import mu_compress
 from numpy import block
 
+from adaptive_filter import algorithms
 from adaptive_filter.algorithms import apa, fd_lms, lms, nlms, rls
 from adaptive_filter.evaluation import load_data, noise_evaluation, select_algorithm
 from adaptive_filter.filter_models.filter_model import FilterModel
@@ -73,7 +75,7 @@ def test_select_algorithm(filter_order, mu, algorithm, block_size, expected):
     "filter_order, mu, algorithm, block_size, noise, delay_amount, random_noise_amount, fs, snr_levels, save_result, expected",
     [
         pytest.param(
-            16, 0.1, "LMS", 0, "babble", 5.0, 30, 16000, 1, False, dict[str, float]
+            1, 0.1, "LMS", 0, "babble", 5.0, 30, 16000, 1, False, dict[str, float]
         ),
     ],
 )
@@ -91,16 +93,31 @@ def test_noise_evaluation(
     expected,
 ):
     result = noise_evaluation(
-        filter_order,
-        mu,
-        algorithm,
-        block_size,
-        noise,
-        delay_amount,
-        random_noise_amount,
-        fs,
-        snr_levels,
-        save_result,
+        filter_order=filter_order,
+        mu=mu,
+        algorithm=algorithm,
+        noise=noise,
+        delay_amount=delay_amount,
+        random_noise_amount=random_noise_amount,
+        fs=fs,
+        block_size=block_size,
+        snr_levels=snr_levels,
+        save_result=save_result,
     )
 
     assert isinstance(result, dict)
+
+    result_keys = {
+        f"{algorithm} Adaption MSE: babble noise",
+        f"{algorithm} Speech MSE: babble noise",
+        f"{algorithm} Mean SNR: babble noise",
+        f"{algorithm} Mean Delta SNR: babble noise",
+        f"{algorithm} Mean Clock-time: babble noise",
+        f"{algorithm} Mean Convergence-time: babble noise",
+    }
+
+    assert set(result.keys()) == result_keys
+
+    assert all(
+        isinstance(v, float) for v in result.values()
+    ), "All results should be floats"
