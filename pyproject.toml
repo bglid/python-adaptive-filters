@@ -33,7 +33,7 @@ classifiers = [  #! Update me
 python = ">=3.9.2,<4.0"
 
 [tool.poetry.group.dev.dependencies]
-bandit = "^1.7.1"
+bandit = "^1.8.6"
 black = "^25.1.0"
 darglint = "^1.8.1"
 isort = {extras = ["colors"], version = "^5.10.1"}
